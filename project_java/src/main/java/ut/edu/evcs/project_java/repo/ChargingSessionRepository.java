@@ -1,5 +1,8 @@
 package ut.edu.evcs.project_java.repo;
 
-public class ChargingSessionRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+import ut.edu.evcs.project_java.domain.session.*;
+
+public interface ChargingSessionRepository extends JpaRepository<ChargingSession, String> {
 
 }

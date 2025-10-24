@@ -1,5 +1,8 @@
 package ut.edu.evcs.project_java.repo;
 
-public class UserRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+import ut.edu.evcs.project_java.domain.user.*;
+
+public interface UserRepository extends JpaRepository<User, String> {
 
 }

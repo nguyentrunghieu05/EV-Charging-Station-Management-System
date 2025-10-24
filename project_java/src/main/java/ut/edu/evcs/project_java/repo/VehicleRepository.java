@@ -1,5 +1,9 @@
 package ut.edu.evcs.project_java.repo;
 
-public class VehicleRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+import ut.edu.evcs.project_java.domain.vehicle.*;
+
+public interface VehicleRepository extends JpaRepository<Vehicle, String> {
 
 }
+
