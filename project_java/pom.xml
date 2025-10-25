@@ -47,6 +47,7 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
 
         <!-- MapStruct (mapper tự động giữa DTO và Entity) -->
