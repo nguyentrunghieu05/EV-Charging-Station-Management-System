@@ -1,7 +1,14 @@
 package ut.edu.evcs.project_java.domain.session;
 
-import jakarta.persistence.*;
-import java.time.OffsetDateTime;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "sessions")
@@ -11,26 +18,49 @@ public class ChargingSession {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
+    @Column(name = "driver_id", nullable = false)
     private String driverId;
-    private String vehicleId;
-    private String connectorId;
-    private String reservationId;
-    private String status; // STARTED, STOPPED, FAILED
-    private OffsetDateTime startTime;
-    private OffsetDateTime endTime;
-    private double kwhDelivered;
-    private double energyCost;
-    private double timeCost;
-    private double idleFee;
-    private double totalCost;
 
-    public ChargingSession() {
-    }
+    @Column(name = "vehicle_id")
+    private String vehicleId;
+
+    @Column(name = "connector_id", nullable = false)
+    private String connectorId;
+
+    @Column(name = "reservation_id")
+    private String reservationId;
+
+    @Column(nullable = false, length = 20)
+    private String status; // STARTED, STOPPED, FAILED
+
+    // Dùng default CURRENT_TIMESTAMP ở DB -> không insert/update từ app (tuỳ bạn)
+    @Column(name = "start_time", insertable = false, updatable = false)
+    private LocalDateTime startTime;
+
+    @Column(name = "end_time")
+    private LocalDateTime endTime;
+
+    @Column(name = "kwh_delivered", nullable = false)
+    private double kwhDelivered = 0d;
+
+    @Column(name = "energy_cost", nullable = false)
+    private BigDecimal energyCost = BigDecimal.ZERO;
+
+    @Column(name = "time_cost", nullable = false)
+    private BigDecimal timeCost = BigDecimal.ZERO;
+
+    @Column(name = "idle_fee", nullable = false)
+    private BigDecimal idleFee = BigDecimal.ZERO;
+
+    @Column(name = "total_cost", nullable = false)
+    private BigDecimal totalCost = BigDecimal.ZERO;
+
+    public ChargingSession() {}
 
     public ChargingSession(String id, String driverId, String vehicleId, String connectorId,
-                           String reservationId, String status, OffsetDateTime startTime,
-                           OffsetDateTime endTime, double kwhDelivered, double energyCost,
-                           double timeCost, double idleFee, double totalCost) {
+                           String reservationId, String status, LocalDateTime startTime,
+                           LocalDateTime endTime, double kwhDelivered, BigDecimal energyCost,
+                           BigDecimal timeCost, BigDecimal idleFee, BigDecimal totalCost) {
         this.id = id;
         this.driverId = driverId;
         this.vehicleId = vehicleId;
@@ -46,109 +76,45 @@ public class ChargingSession {
         this.totalCost = totalCost;
     }
 
-    public String getId() {
-        return this.id;
-    }
+    // Getters/Setters
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
 
-    public void setId(String id) {
-        this.id = id;
-    }
+    public String getDriverId() { return driverId; }
+    public void setDriverId(String driverId) { this.driverId = driverId; }
 
-    public String getDriverId() {
-        return this.driverId;
-    }
+    public String getVehicleId() { return vehicleId; }
+    public void setVehicleId(String vehicleId) { this.vehicleId = vehicleId; }
 
-    public void setDriverId(String driverId) {
-        this.driverId = driverId;
-    }
+    public String getConnectorId() { return connectorId; }
+    public void setConnectorId(String connectorId) { this.connectorId = connectorId; }
 
-    public String getVehicleId() {
-        return this.vehicleId;
-    }
+    public String getReservationId() { return reservationId; }
+    public void setReservationId(String reservationId) { this.reservationId = reservationId; }
 
-    public void setVehicleId(String vehicleId) {
-        this.vehicleId = vehicleId;
-    }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
-    public String getConnectorId() {
-        return this.connectorId;
-    }
+    public LocalDateTime getStartTime() { return startTime; }
+    public void setStartTime(LocalDateTime startTime) { this.startTime = startTime; }
 
-    public void setConnectorId(String connectorId) {
-        this.connectorId = connectorId;
-    }
+    public LocalDateTime getEndTime() { return endTime; }
+    public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
 
-    public String getReservationId() {
-        return this.reservationId;
-    }
+    public double getKwhDelivered() { return kwhDelivered; }
+    public void setKwhDelivered(double kwhDelivered) { this.kwhDelivered = kwhDelivered; }
 
-    public void setReservationId(String reservationId) {
-        this.reservationId = reservationId;
-    }
+    public BigDecimal getEnergyCost() { return energyCost; }
+    public void setEnergyCost(BigDecimal energyCost) { this.energyCost = energyCost; }
 
-    public String getStatus() {
-        return this.status;
-    }
+    public BigDecimal getTimeCost() { return timeCost; }
+    public void setTimeCost(BigDecimal timeCost) { this.timeCost = timeCost; }
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
+    public BigDecimal getIdleFee() { return idleFee; }
+    public void setIdleFee(BigDecimal idleFee) { this.idleFee = idleFee; }
 
-    public OffsetDateTime getStartTime() {
-        return this.startTime;
-    }
-
-    public void setStartTime(OffsetDateTime startTime) {
-        this.startTime = startTime;
-    }
-
-    public OffsetDateTime getEndTime() {
-        return this.endTime;
-    }
-
-    public void setEndTime(OffsetDateTime endTime) {
-        this.endTime = endTime;
-    }
-
-    public double getKwhDelivered() {
-        return this.kwhDelivered;
-    }
-
-    public void setKwhDelivered(double kwhDelivered) {
-        this.kwhDelivered = kwhDelivered;
-    }
-
-    public double getEnergyCost() {
-        return this.energyCost;
-    }
-
-    public void setEnergyCost(double energyCost) {
-        this.energyCost = energyCost;
-    }
-
-    public double getTimeCost() {
-        return this.timeCost;
-    }
-
-    public void setTimeCost(double timeCost) {
-        this.timeCost = timeCost;
-    }
-
-    public double getIdleFee() {
-        return this.idleFee;
-    }
-
-    public void setIdleFee(double idleFee) {
-        this.idleFee = idleFee;
-    }
-
-    public double getTotalCost() {
-        return this.totalCost;
-    }
-
-    public void setTotalCost(double totalCost) {
-        this.totalCost = totalCost;
-    }
+    public BigDecimal getTotalCost() { return totalCost; }
+    public void setTotalCost(BigDecimal totalCost) { this.totalCost = totalCost; }
 
     @Override
     public String toString() {

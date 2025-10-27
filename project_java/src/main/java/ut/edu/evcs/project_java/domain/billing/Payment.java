@@ -1,7 +1,14 @@
 package ut.edu.evcs.project_java.domain.billing;
 
-import jakarta.persistence.*;
-import java.util.Date;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "payments")
@@ -11,7 +18,7 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @Column(nullable = false)
+    @Column(name = "invoice_id", nullable = false)
     private String invoiceId;
 
     @Column(nullable = false)
@@ -21,17 +28,18 @@ public class Payment {
     private String status; // e.g. "PENDING", "SETTLED", "FAILED"
 
     @Column(nullable = false)
-    private double amount;
+    private BigDecimal amount;
 
+    @Column(name = "provider_ref")
     private String providerRef; // reference id from payment gateway
 
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date createdAt = new Date();
+    @Column(name = "created_at", insertable = false, updatable = false)
+    private LocalDateTime createdAt;
 
 
     public Payment() {}
 
-    public Payment(String invoiceId, String method, String status, double amount, String providerRef) {
+    public Payment(String invoiceId, String method, String status, BigDecimal amount, String providerRef) {
         this.invoiceId = invoiceId;
         this.method = method;
         this.status = status;
@@ -68,11 +76,11 @@ public class Payment {
         this.status = status;
     }
 
-    public double getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 
-    public void setAmount(double amount) {
+    public void setAmount(BigDecimal amount) {
         this.amount = amount;
     }
 
@@ -84,11 +92,11 @@ public class Payment {
         this.providerRef = providerRef;
     }
 
-    public Date getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Date createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 

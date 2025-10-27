@@ -1,6 +1,11 @@
 package ut.edu.evcs.project_java.domain.vehicle;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "vehicles")
@@ -10,11 +15,17 @@ public class Vehicle {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
+    @Column(name = "driver_id", nullable = false)
     private String driverId; // FK to users.id (EV_DRIVER)
     private String brand;
     private String model;
+
+     @Column(name = "plate_no", nullable = false, unique = true)
     private String plateNo;
+    @Column(name = "battery_capacity_kwh", nullable = false)
     private double batteryCapacityKWh;
+
+    @Column(name = "connector_supported")
     private String connectorSupported;
 
     public Vehicle() {

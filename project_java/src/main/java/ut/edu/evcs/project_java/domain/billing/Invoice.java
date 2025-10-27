@@ -1,7 +1,14 @@
 package ut.edu.evcs.project_java.domain.billing;
 
-import jakarta.persistence.*;
-import java.time.OffsetDateTime;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "invoices")
@@ -11,103 +18,87 @@ public class Invoice {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
+    @Column(name = "driver_id", nullable = false)
     private String driverId;
+
+    @Column(name = "session_id")
     private String sessionId;
-    private double amount;
-    private double taxAmount;
-    private String currency;
-    private OffsetDateTime issuedAt;
-    private String status; // DRAFT, ISSUED, PAID, VOID
+
+    @Column(name = "total_amount", nullable = false)
+    private BigDecimal totalAmount;
+
+    @Column(name = "tax_amount", nullable = false)
+    private BigDecimal taxAmount = BigDecimal.ZERO;
+
+    @Column(nullable = false, length = 10)
+    private String currency = "VND";
+
+    @Column(nullable = false, length = 20)
+    private String status;
+
+    @Column(name = "issued_at", insertable = false, updatable = false)
+    private LocalDateTime issuedAt;
+
+    @Column(name = "paid_at")
+    private LocalDateTime paidAt;
+
+    @Column(name = "pdf_url", length = 255)
     private String pdfUrl;
 
-    public Invoice() {
-    }
+    public Invoice() {}
 
-    public Invoice(String id, String driverId, String sessionId, double amount,
-                   double taxAmount, String currency, OffsetDateTime issuedAt,
-                   String status, String pdfUrl) {
+    public Invoice(String id,
+                   String driverId,
+                   String sessionId,
+                   BigDecimal totalAmount,
+                   BigDecimal taxAmount,
+                   String currency,
+                   String status,
+                   LocalDateTime issuedAt,
+                   LocalDateTime paidAt,
+                   String pdfUrl) {
         this.id = id;
         this.driverId = driverId;
         this.sessionId = sessionId;
-        this.amount = amount;
+        this.totalAmount = totalAmount;
         this.taxAmount = taxAmount;
         this.currency = currency;
-        this.issuedAt = issuedAt;
         this.status = status;
+        this.issuedAt = issuedAt;
+        this.paidAt = paidAt;
         this.pdfUrl = pdfUrl;
     }
 
-    public String getId() {
-        return this.id;
-    }
+    // --- getters/setters ---
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
 
-    public void setId(String id) {
-        this.id = id;
-    }
+    public String getDriverId() { return driverId; }
+    public void setDriverId(String driverId) { this.driverId = driverId; }
 
-    public String getDriverId() {
-        return this.driverId;
-    }
+    public String getSessionId() { return sessionId; }
+    public void setSessionId(String sessionId) { this.sessionId = sessionId; }
 
-    public void setDriverId(String driverId) {
-        this.driverId = driverId;
-    }
+    public BigDecimal getTotalAmount() { return totalAmount; }
+    public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
 
-    public String getSessionId() {
-        return this.sessionId;
-    }
+    public BigDecimal getTaxAmount() { return taxAmount; }
+    public void setTaxAmount(BigDecimal taxAmount) { this.taxAmount = taxAmount; }
 
-    public void setSessionId(String sessionId) {
-        this.sessionId = sessionId;
-    }
+    public String getCurrency() { return currency; }
+    public void setCurrency(String currency) { this.currency = currency; }
 
-    public double getAmount() {
-        return this.amount;
-    }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
-    public void setAmount(double amount) {
-        this.amount = amount;
-    }
+    public LocalDateTime getIssuedAt() { return issuedAt; }
+    public void setIssuedAt(LocalDateTime issuedAt) { this.issuedAt = issuedAt; }
 
-    public double getTaxAmount() {
-        return this.taxAmount;
-    }
+    public LocalDateTime getPaidAt() { return paidAt; }
+    public void setPaidAt(LocalDateTime paidAt) { this.paidAt = paidAt; }
 
-    public void setTaxAmount(double taxAmount) {
-        this.taxAmount = taxAmount;
-    }
-
-    public String getCurrency() {
-        return this.currency;
-    }
-
-    public void setCurrency(String currency) {
-        this.currency = currency;
-    }
-
-    public OffsetDateTime getIssuedAt() {
-        return this.issuedAt;
-    }
-
-    public void setIssuedAt(OffsetDateTime issuedAt) {
-        this.issuedAt = issuedAt;
-    }
-
-    public String getStatus() {
-        return this.status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public String getPdfUrl() {
-        return this.pdfUrl;
-    }
-
-    public void setPdfUrl(String pdfUrl) {
-        this.pdfUrl = pdfUrl;
-    }
+    public String getPdfUrl() { return pdfUrl; }
+    public void setPdfUrl(String pdfUrl) { this.pdfUrl = pdfUrl; }
 
     @Override
     public String toString() {
@@ -115,11 +106,12 @@ public class Invoice {
                 "id='" + id + '\'' +
                 ", driverId='" + driverId + '\'' +
                 ", sessionId='" + sessionId + '\'' +
-                ", amount=" + amount +
+                ", totalAmount=" + totalAmount +
                 ", taxAmount=" + taxAmount +
                 ", currency='" + currency + '\'' +
-                ", issuedAt=" + issuedAt +
                 ", status='" + status + '\'' +
+                ", issuedAt=" + issuedAt +
+                ", paidAt=" + paidAt +
                 ", pdfUrl='" + pdfUrl + '\'' +
                 '}';
     }
