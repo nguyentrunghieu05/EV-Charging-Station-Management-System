@@ -5,4 +5,5 @@ CREATE DATABASE IF NOT EXISTS evcs
 CREATE USER IF NOT EXISTS 'evcs'@'localhost' IDENTIFIED BY '123456';
 GRANT ALL PRIVILEGES ON evcs.* TO 'evcs'@'localhost';
 FLUSH PRIVILEGES;
+
 Chạy java: .\mvnw clean -U spring-boot:run
