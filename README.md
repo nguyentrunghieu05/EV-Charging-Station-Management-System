@@ -7,4 +7,6 @@ CREATE USER IF NOT EXISTS 'evcs'@'localhost' IDENTIFIED BY '123456';
 GRANT ALL PRIVILEGES ON evcs.* TO 'evcs'@'localhost';
 FLUSH PRIVILEGES;
 
-Chạy java: .\mvnw clean -U spring-boot:run
+Chạy build java: ./mvnw clean install -DskipTests
+
+Chạy java: ./mvnw spring-boot:run
