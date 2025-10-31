@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import ut.edu.evcs.project_java.domain.user.enums.UserType;
+import jakarta.persistence.UniqueConstraint;
 
 @Entity
 @Table(name = "users")
@@ -20,6 +21,9 @@ public class User {
 
     @Column(nullable = false, unique = true, length = 255)
     private String email;
+
+    @Column(nullable = false, unique = true, length = 50)
+    private String username;
 
     @Column(length = 20)
     private String phone;
@@ -36,20 +40,25 @@ public class User {
 
     public User() {}
 
-    public User(String id, String email, String phone, String fullName, String passwordHash, UserType type) {
+    public User(String id, String email, String username, String phone, String fullName, String passwordHash, UserType type) {
         this.id = id;
         this.email = email;
+        this.username = username;
         this.phone = phone;
         this.fullName = fullName;
         this.passwordHash = passwordHash;
         this.type = type;
     }
 
+    // getters/setters (thêm get/set cho username)
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
 
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
@@ -68,9 +77,10 @@ public class User {
         return "User{" +
                 "id='" + id + '\'' +
                 ", email='" + email + '\'' +
+                ", username='" + username + '\'' +
                 ", phone='" + phone + '\'' +
                 ", fullName='" + fullName + '\'' +
-                ", passwordHash='" + passwordHash + '\'' +
+                ", passwordHash='***'" +
                 ", type=" + type +
                 '}';
     }
