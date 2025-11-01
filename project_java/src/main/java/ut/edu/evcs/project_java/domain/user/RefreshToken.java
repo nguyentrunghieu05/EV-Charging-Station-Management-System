@@ -1,7 +1,18 @@
 package ut.edu.evcs.project_java.domain.user;
 
-import jakarta.persistence.*;
 import java.time.OffsetDateTime;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "refresh_tokens")
@@ -10,8 +21,12 @@ public class RefreshToken {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @Column(name = "user_id", nullable = false, length = 36)
+    private String userId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    @JsonIgnore
     private User user;
 
     @Column(nullable = false, unique = true, length = 255)
@@ -35,9 +50,12 @@ public class RefreshToken {
     // getters/setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
+    
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
 
     public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
+    public void setUser(User user) { this.user = user; } // không dùng để /refresh
 
     public String getToken() { return token; }
     public void setToken(String token) { this.token = token; }

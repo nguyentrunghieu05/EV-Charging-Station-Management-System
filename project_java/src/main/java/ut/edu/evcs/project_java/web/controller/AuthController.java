@@ -1,18 +1,30 @@
 package ut.edu.evcs.project_java.web.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.*;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.WebUtils;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import ut.edu.evcs.project_java.domain.user.RefreshToken;
 import ut.edu.evcs.project_java.domain.user.User;
 import ut.edu.evcs.project_java.domain.user.enums.UserType;
@@ -22,10 +34,6 @@ import ut.edu.evcs.project_java.service.RefreshTokenService;
 import ut.edu.evcs.project_java.web.dto.auth.AuthResponse;
 import ut.edu.evcs.project_java.web.dto.auth.LoginRequest;
 import ut.edu.evcs.project_java.web.dto.auth.RegisterRequest;
-
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.Map;
 
 @Tag(name = "Auth")
 @RestController
@@ -58,7 +66,8 @@ public class AuthController {
 
     @Operation(summary = "Đăng ký")
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest req, HttpServletRequest httpReq, HttpServletResponse httpRes) {
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest req,
+                                                 HttpServletRequest httpReq, HttpServletResponse httpRes) {
         if (users.existsByEmail(req.getEmail())) {
             throw new IllegalArgumentException("Email đã tồn tại");
         }
@@ -80,7 +89,8 @@ public class AuthController {
 
     @Operation(summary = "Đăng nhập")
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req, HttpServletRequest httpReq, HttpServletResponse httpRes) {
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req,
+                                              HttpServletRequest httpReq, HttpServletResponse httpRes) {
         Authentication auth = authManager.authenticate(
                 new UsernamePasswordAuthenticationToken(req.getEmailOrUsername(), req.getPassword())
         );
@@ -93,22 +103,35 @@ public class AuthController {
 
     @Operation(summary = "Refresh access token")
     @PostMapping("/refresh")
-    public ResponseEntity<AuthResponse> refresh(@CookieValue(name = "${app.jwt.refresh-cookie-name:refresh_token}", required = false) String refreshTokenCookie,
-                                                HttpServletResponse httpRes) {
+    public ResponseEntity<AuthResponse> refresh(HttpServletRequest httpReq, HttpServletResponse httpRes) {
+        // Đọc cookie theo tên cấu hình (tránh dùng @CookieValue với placeholder)
+        Cookie c = WebUtils.getCookie(httpReq, refreshCookieName);
+        String refreshTokenCookie = (c == null) ? null : c.getValue();
+
         if (refreshTokenCookie == null || refreshTokenCookie.isBlank()) {
             return ResponseEntity.status(401).build();
         }
-        var rt = refreshSvc.findValid(refreshTokenCookie).orElse(null);
+
+        RefreshToken rt = refreshSvc.findValid(refreshTokenCookie).orElse(null);
         if (rt == null) {
             return ResponseEntity.status(401).build();
         }
-        User u = rt.getUser();
+
+        // *** TỐI ƯU: không chạm rt.getUser() ***
+        // Lấy thông tin user chủ động bằng repository (1 query, không lazy)
+        User u = users.findById(rt.getUserId()).orElse(null);
+        if (u == null) {
+            // Token mồ côi → revoke phòng hờ
+            refreshSvc.revoke(rt);
+            return ResponseEntity.status(401).build();
+        }
+
         String access = jwt.generateAccessToken(u.getUsername(), Map.of(
                 "uid", u.getId(), "email", u.getEmail(), "role", u.getType().name()
         ));
 
         AuthResponse body = buildAuthResponse(u, access);
-        // (tuỳ chọn) sliding refresh: bỏ qua để đơn giản
+        // (tuỳ chọn) sliding refresh: nếu muốn rotate thì tạo refresh mới ở đây
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(refreshTokenCookie, rt.getExpiresAt()).toString())
@@ -117,19 +140,19 @@ public class AuthController {
 
     @Operation(summary = "Logout (revoke refresh)")
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@CookieValue(name = "${app.jwt.refresh-cookie-name:refresh_token}", required = false) String refreshTokenCookie,
-                                       HttpServletResponse httpRes) {
-        if (refreshTokenCookie != null) {
-            refreshSvc.findValid(refreshTokenCookie).ifPresent(refreshSvc::revoke);
-            // xoá cookie
-            ResponseCookie clear = ResponseCookie.from(refreshCookieName, "")
-                    .httpOnly(true).secure(refreshCookieSecure).path("/")
-                    .maxAge(0)
-                    .domain(refreshCookieDomain)
-                    .sameSite(refreshCookieSameSite)
-                    .build();
-            httpRes.addHeader(HttpHeaders.SET_COOKIE, clear.toString());
+    public ResponseEntity<Void> logout(HttpServletRequest httpReq, HttpServletResponse httpRes) {
+        Cookie c = WebUtils.getCookie(httpReq, refreshCookieName);
+        if (c != null && c.getValue() != null && !c.getValue().isBlank()) {
+            refreshSvc.findValid(c.getValue()).ifPresent(refreshSvc::revoke);
         }
+        // Xoá cookie
+        ResponseCookie clear = ResponseCookie.from(refreshCookieName, "")
+                .httpOnly(true).secure(refreshCookieSecure).path("/")
+                .maxAge(0)
+                .domain(refreshCookieDomain)
+                .sameSite(refreshCookieSameSite)
+                .build();
+        httpRes.addHeader(HttpHeaders.SET_COOKIE, clear.toString());
         return ResponseEntity.noContent().build();
     }
 
@@ -154,7 +177,7 @@ public class AuthController {
         ));
         String refresh = jwt.generateRefreshToken(u.getUsername());
 
-        // lưu refresh vào DB
+        // lưu refresh vào DB (đã dùng userId phẳng trong RefreshTokenService)
         var exp = OffsetDateTime.ofInstant(
                 jwt.parse(refresh).getBody().getExpiration().toInstant(), ZoneOffset.UTC);
         String ip = clientIp(httpReq);
