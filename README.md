@@ -1,6 +1,7 @@
 Create database: mysql -u root -p
 
 DROP DATABASE IF EXISTS evcs; (drop DB cũ nếu có)
+
 CREATE DATABASE IF NOT EXISTS evcs CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE USER IF NOT EXISTS 'evcs'@'%' IDENTIFIED BY 'evcs123'; 
