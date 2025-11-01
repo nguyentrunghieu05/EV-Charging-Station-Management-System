@@ -1,12 +1,17 @@
-Tạo database: mysql -u root -p
+Create database: mysql -u root -p
 
-CREATE DATABASE IF NOT EXISTS evcs
-  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+DROP DATABASE IF EXISTS evcs; (drop DB cũ nếu có)
+CREATE DATABASE IF NOT EXISTS evcs CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-CREATE USER IF NOT EXISTS 'evcs'@'localhost' IDENTIFIED BY '123456';
-GRANT ALL PRIVILEGES ON evcs.* TO 'evcs'@'localhost';
+CREATE USER IF NOT EXISTS 'evcs'@'%' IDENTIFIED BY 'evcs123'; 
+GRANT ALL PRIVILEGES ON evcs.* TO 'evcs'@'%'; 
 FLUSH PRIVILEGES;
 
-Chạy build java: ./mvnw clean install -DskipTests
+Run migration + compile:
+.\mvnw clean compile flyway:migrate
 
-Chạy java: ./mvnw spring-boot:run
+build jar:
+.\mvnw package
+
+Run web:
+java -jar target/project_java-0.0.1-SNAPSHOT.jar
