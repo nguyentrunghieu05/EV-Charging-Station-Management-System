@@ -12,7 +12,17 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "sessions")
+
 public class ChargingSession {
+
+    @Column(name = "meter_start_kwh")
+    private BigDecimal meterStartKwh = BigDecimal.ZERO;
+
+    @Column(name = "meter_end_kwh")
+    private BigDecimal meterEndKwh = BigDecimal.ZERO;
+
+    @Column(name = "tariff_id")
+    private String tariffId;
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -115,6 +125,15 @@ public class ChargingSession {
 
     public BigDecimal getTotalCost() { return totalCost; }
     public void setTotalCost(BigDecimal totalCost) { this.totalCost = totalCost; }
+
+    public BigDecimal getMeterStartKwh() { return meterStartKwh; }
+    public void setMeterStartKwh(BigDecimal meterStartKwh) { this.meterStartKwh = meterStartKwh; }
+
+    public BigDecimal getMeterEndKwh() { return meterEndKwh; }
+    public void setMeterEndKwh(BigDecimal meterEndKwh) { this.meterEndKwh = meterEndKwh; }
+
+    public String getTariffId() { return tariffId; }
+    public void setTariffId(String tariffId) { this.tariffId = tariffId; }
 
     @Override
     public String toString() {
