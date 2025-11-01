@@ -509,29 +509,30 @@ PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 DROP TRIGGER IF EXISTS trg_reservation_before_ins;
 DROP TRIGGER IF EXISTS trg_reservation_before_upd;
 
-DELIMITER $$
-
 CREATE TRIGGER trg_reservation_before_ins
 BEFORE INSERT ON reservations
 FOR EACH ROW
 BEGIN
   -- start < end
   IF NEW.start_window >= NEW.end_window THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid reservation window: start >= end';
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Invalid reservation window: start >= end';
   END IF;
 
   -- overlap check
   IF NEW.status <> 'CANCELLED' THEN
     IF EXISTS (
-      SELECT 1 FROM reservations r
+      SELECT 1
+      FROM reservations r
       WHERE r.connector_id = NEW.connector_id
         AND r.status <> 'CANCELLED'
         AND NOT (NEW.end_window <= r.start_window OR NEW.start_window >= r.end_window)
     ) THEN
-      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Reservation overlaps with existing booking';
+      SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Reservation overlaps with existing booking';
     END IF;
   END IF;
-END$$
+END;
 
 CREATE TRIGGER trg_reservation_before_upd
 BEFORE UPDATE ON reservations
@@ -539,23 +540,24 @@ FOR EACH ROW
 BEGIN
   -- start < end
   IF NEW.start_window >= NEW.end_window THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid reservation window: start >= end';
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Invalid reservation window: start >= end';
   END IF;
 
   -- overlap check (bỏ qua chính nó)
   IF NEW.status <> 'CANCELLED' THEN
     IF EXISTS (
-      SELECT 1 FROM reservations r
+      SELECT 1
+      FROM reservations r
       WHERE r.connector_id = NEW.connector_id
         AND r.id <> OLD.id
         AND r.status <> 'CANCELLED'
         AND NOT (NEW.end_window <= r.start_window OR NEW.start_window >= r.end_window)
     ) THEN
-      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Reservation overlaps with existing booking';
+      SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Reservation overlaps with existing booking';
     END IF;
   END IF;
-END$$
-
-DELIMITER ;
+END;
 
 SET FOREIGN_KEY_CHECKS = 1;
