@@ -10,11 +10,8 @@ GRANT ALL PRIVILEGES ON evcs.* TO 'evcs'@'%';
 
 FLUSH PRIVILEGES;
 
-Run migration + compile:
-.\mvnw clean compile flyway:migrate
+Run migration + compile: .\mvnw clean compile flyway:migrate
 
-build jar:
-.\mvnw package
+build jar: .\mvnw package
 
-Run web:
-java -jar target/project_java-0.0.1-SNAPSHOT.jar
+Run web: java -jar target/project_java-0.0.1-SNAPSHOT.jar
