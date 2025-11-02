@@ -11,6 +11,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import io.jsonwebtoken.JwtException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import java.io.IOException;
 
@@ -37,8 +39,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 var auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
                 auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));
                 SecurityContextHolder.getContext().setAuthentication(auth);
-            } catch (Exception ignored) {
-                // invalid or expired -> let it fall through as anonymous
+            } catch (JwtException | IllegalArgumentException | UsernameNotFoundException ignored) {
+                // invalid, expired, or user not found -> let it fall through as anonymous
             }
         }
         chain.doFilter(req, res);

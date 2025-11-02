@@ -9,7 +9,6 @@ import ut.edu.evcs.project_java.domain.user.enums.UserType;
 import ut.edu.evcs.project_java.repo.UserRepository;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 
 @Service
