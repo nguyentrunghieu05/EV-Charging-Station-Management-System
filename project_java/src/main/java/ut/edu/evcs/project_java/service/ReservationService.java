@@ -23,7 +23,7 @@ public class ReservationService {
      */
     @Transactional
     public Reservation create(Reservation reservation) {
-        if (reservation.getDriverId() == null || reservation.getDriverId().isBlank()) {
+        if (reservation.getDriverId() == null || reservation.getDriverId().toString().isBlank()) {
             throw new IllegalArgumentException("driverId is required");
         }
         if (reservation.getConnectorId() == null || reservation.getConnectorId().isBlank()) {
