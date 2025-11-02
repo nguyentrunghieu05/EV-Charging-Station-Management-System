@@ -27,18 +27,31 @@ public class Reservation {
     @Column(nullable = false)
     private String status;
 
+    @Column(name = "connector_id")
+    private String connectorId;
+
+    @Column(name = "start_window")
+    private LocalDateTime startWindow;
+
+    @Column(name = "end_window")
+    private LocalDateTime endWindow;
+
     // No-arg constructor
     public Reservation() {
     }
 
     // All-args constructor
-    public Reservation(Long id, Long userId, Long stationId, LocalDateTime startTime, LocalDateTime endTime, String status) {
+    public Reservation(Long id, Long userId, Long stationId, LocalDateTime startTime, LocalDateTime endTime, String status,
+                      String connectorId, LocalDateTime startWindow, LocalDateTime endWindow) {
         this.id = id;
         this.userId = userId;
         this.stationId = stationId;
         this.startTime = startTime;
         this.endTime = endTime;
         this.status = status;
+        this.connectorId = connectorId;
+        this.startWindow = startWindow;
+        this.endWindow = endWindow;
     }
 
     // Getters and setters
@@ -90,18 +103,50 @@ public class Reservation {
         this.status = status;
     }
 
+    public String getConnectorId() {
+        return connectorId;
+    }
+
+    public void setConnectorId(String connectorId) {
+        this.connectorId = connectorId;
+    }
+
+    public LocalDateTime getStartWindow() {
+        return startWindow;
+    }
+
+    public void setStartWindow(LocalDateTime startWindow) {
+        this.startWindow = startWindow;
+    }
+
+    public LocalDateTime getEndWindow() {
+        return endWindow;
+    }
+
+    public void setEndWindow(LocalDateTime endWindow) {
+        this.endWindow = endWindow;
+    }
+
     // Builder
     public static Builder builder() {
         return new Builder();
     }
 
+    public Object getDriverId() {
+        return userId; // using userId as driverId
+    }
+
     public static class Builder {
+
         private Long id;
         private Long userId;
         private Long stationId;
         private LocalDateTime startTime;
         private LocalDateTime endTime;
         private String status;
+        private String connectorId;
+        private LocalDateTime startWindow;
+        private LocalDateTime endWindow;
 
         public Builder id(Long id) {
             this.id = id;
@@ -133,23 +178,42 @@ public class Reservation {
             return this;
         }
 
+        public Builder connectorId(String connectorId) {
+            this.connectorId = connectorId;
+            return this;
+        }
+
+        public Builder startWindow(LocalDateTime startWindow) {
+            this.startWindow = startWindow;
+            return this;
+        }
+
+        public Builder endWindow(LocalDateTime endWindow) {
+            this.endWindow = endWindow;
+            return this;
+        }
+
         public Reservation build() {
-            return new Reservation(id, userId, stationId, startTime, endTime, status);
+            return new Reservation(id, userId, stationId, startTime, endTime, status, connectorId, startWindow, endWindow);
         }
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         Reservation that = (Reservation) o;
-        return Objects.equals(id, that.id) &&
-               Objects.equals(userId, that.userId) &&
-               Objects.equals(stationId, that.stationId) &&
-               Objects.equals(startTime, that.startTime) &&
-               Objects.equals(endTime, that.endTime) &&
-               Objects.equals(status, that.status);
+        return Objects.equals(id, that.id)
+                && Objects.equals(userId, that.userId)
+                && Objects.equals(stationId, that.stationId)
+                && Objects.equals(startTime, that.startTime)
+                && Objects.equals(endTime, that.endTime)
+                && Objects.equals(status, that.status);
     }
 
     @Override
@@ -159,13 +223,13 @@ public class Reservation {
 
     @Override
     public String toString() {
-        return "Reservation{" +
-               "id=" + id +
-               ", userId=" + userId +
-               ", stationId=" + stationId +
-               ", startTime=" + startTime +
-               ", endTime=" + endTime +
-               ", status='" + status + '\'' +
-               '}';
+        return "Reservation{"
+                + "id=" + id
+                + ", userId=" + userId
+                + ", stationId=" + stationId
+                + ", startTime=" + startTime
+                + ", endTime=" + endTime
+                + ", status='" + status + '\''
+                + '}';
     }
 }
