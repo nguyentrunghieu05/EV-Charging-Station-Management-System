@@ -1,4 +1,4 @@
-package ut.edu.evcs.project_java.web.websocket;
+package ut.edu.evcs.project_java.web.controller;
 
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
