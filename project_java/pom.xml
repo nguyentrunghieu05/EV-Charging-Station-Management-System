@@ -88,6 +88,18 @@
       <version>${springdoc.version}</version>
     </dependency>
 
+    <!-- Spatial / JTS (Bắt buộc cho Station.java với Point) -->
+    <dependency>
+        <groupId>org.hibernate.orm</groupId>
+        <artifactId>hibernate-spatial</artifactId>
+        <!-- Version được quản lý bởi Spring Boot parent -->
+    </dependency>
+    <dependency>
+        <groupId>org.locationtech.jts</groupId>
+        <artifactId>jts-core</artifactId>
+        <version>1.19.0</version> <!-- SỬA LỖI: Cung cấp phiên bản cụ thể -->
+    </dependency>
+
     <!-- Flyway -->
     <dependency>
       <groupId>org.flywaydb</groupId>

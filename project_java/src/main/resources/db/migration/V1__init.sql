@@ -21,12 +21,13 @@ CREATE TABLE IF NOT EXISTS users (
 -- Stations
 -- ======================================================================
 CREATE TABLE IF NOT EXISTS stations (
-    id      VARCHAR(36) PRIMARY KEY,
-    name    VARCHAR(255),
-    address VARCHAR(255),
-    lat     DOUBLE,
-    lng     DOUBLE,
-    status  VARCHAR(20)
+    id              VARCHAR(36) PRIMARY KEY,
+    name            VARCHAR(255),
+    address         VARCHAR(255),
+    lat             DOUBLE,
+    lng             DOUBLE,
+    status          VARCHAR(20),
+    available_ports INT NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ======================================================================
@@ -50,7 +51,7 @@ CREATE INDEX        idx_points_station ON charging_points(station_id);
 -- ======================================================================
 CREATE TABLE IF NOT EXISTS connectors (
     id            VARCHAR(36) PRIMARY KEY,
-    type          VARCHAR(20),          -- CCS / CHAdeMO / AC
+    type          VARCHAR(20),       -- CCS / CHAdeMO / AC
     max_current_a DOUBLE NOT NULL DEFAULT 0,
     voltage_v     DOUBLE NOT NULL DEFAULT 0,
     occupied      BOOLEAN NOT NULL DEFAULT FALSE,
@@ -71,7 +72,7 @@ CREATE TABLE IF NOT EXISTS reservations (
     connector_id VARCHAR(36) NOT NULL,
     start_window TIMESTAMP   NOT NULL,
     end_window   TIMESTAMP   NOT NULL,
-    status       VARCHAR(20) NOT NULL,       -- PENDING/CONFIRMED/CANCELLED
+    status       VARCHAR(20) NOT NULL,     -- PENDING/CONFIRMED/CANCELLED
     CONSTRAINT fk_reservation_driver
         FOREIGN KEY (driver_id) REFERENCES users(id),
     CONSTRAINT fk_reservation_connector
@@ -136,10 +137,10 @@ CREATE TABLE IF NOT EXISTS invoices (
         FOREIGN KEY (session_id)   REFERENCES sessions(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE INDEX idx_invoices_driver     ON invoices(driver_id);
-CREATE INDEX idx_invoices_session    ON invoices(session_id);
-CREATE INDEX idx_invoices_status     ON invoices(status);
-CREATE INDEX idx_invoices_issued_at  ON invoices(issued_at);
+CREATE INDEX idx_invoices_driver    ON invoices(driver_id);
+CREATE INDEX idx_invoices_session   ON invoices(session_id);
+CREATE INDEX idx_invoices_status    ON invoices(status);
+CREATE INDEX idx_invoices_issued_at ON invoices(issued_at);
 
 -- ======================================================================
 -- Payments
@@ -175,3 +176,5 @@ CREATE TABLE IF NOT EXISTS wallets (
 CREATE INDEX idx_wallets_owner ON wallets(owner_user_id);
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+
