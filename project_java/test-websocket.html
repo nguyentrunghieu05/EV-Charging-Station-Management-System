@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EVCS WebSocket Test</title>
+  <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+    }
+    input, button {
+      padding: 6px;
+      margin: 4px;
+    }
+    #log {
+      border: 1px solid #ccc;
+      padding: 10px;
+      height: 250px;
+      overflow-y: auto;
+      margin-top: 10px;
+      background-color: #f8f8f8;
+    }
+  </style>
+</head>
+<body>
+  <h2>⚡ EVCS WebSocket Test</h2>
+
+  <div>
+    <button onclick="connect()">🔌 Connect</button>
+    <button onclick="disconnect()">❌ Disconnect</button>
+  </div>
+
+  <div>
+    <h4>Send Status Update:</h4>
+    <input id="sessionId" type="text" placeholder="Session ID" value="session-001" />
+    <input id="connectorId" type="text" placeholder="Connector ID" value="conn-1" />
+    <input id="status" type="text" placeholder="Status" value="CHARGING" />
+    <input id="energy" type="number" placeholder="Energy (kWh)" value="2.5" />
+    <input id="power" type="number" placeholder="Power (kW)" value="7.2" />
+    <button onclick="sendUpdate()">🚀 Send</button>
+  </div>
+
+  <h4>📡 Received Messages:</h4>
+  <div id="log"></div>
+
+  <script>
+    let stompClient = null;
+
+    function connect() {
+      const socket = new SockJS('/ws');
+      stompClient = Stomp.over(socket);
+
+      stompClient.connect({}, frame => {
+        log('Connected: ' + frame);
+        stompClient.subscribe('/topic/session-updates', message => {
+          log('Received: ' + message.body);
+        });
+      });
+    }
+
+    function disconnect() {
+      if (stompClient !== null) {
+        stompClient.disconnect();
+      }
+      log('Disconnected');
+    }
+
+    function sendUpdate() {
+      const update = {
+        sessionId: document.getElementById('sessionId').value,
+        connectorId: document.getElementById('connectorId').value,
+        status: document.getElementById('status').value,
+        energyDelivered: parseFloat(document.getElementById('energy').value),
+        currentPower: parseFloat(document.getElementById('power').value)
+      };
+      stompClient.send(`/app/session/${update.sessionId}`, {}, JSON.stringify(update));
+      log('Sent: ' + JSON.stringify(update));
+    }
+
+    function log(message) {
+      const logDiv = document.getElementById('log');
+      logDiv.innerHTML += message + '<br>';
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+  </script>
+</body>
+</html>

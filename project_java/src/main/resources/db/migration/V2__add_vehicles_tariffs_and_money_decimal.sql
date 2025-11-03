@@ -30,7 +30,8 @@ SET @sql := IF(@exists = 0,
 );
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
--- uq_vehicle_plate
+-- uq_vehicle_plate.\mvnw flyway:migrate
+
 SET @exists := (
   SELECT COUNT(1) FROM information_schema.statistics
   WHERE table_schema = DATABASE()
