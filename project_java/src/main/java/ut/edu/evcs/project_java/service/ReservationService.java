@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ut.edu.evcs.project_java.domain.session.Reservation;
 import ut.edu.evcs.project_java.repo.ReservationRepository;
+import org.springframework.lang.NonNull;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,7 +24,7 @@ public class ReservationService {
      */
     @Transactional
     public Reservation create(Reservation reservation) {
-        if (reservation.getDriverId() == null || reservation.getDriverId().toString().isBlank()) {
+        if (reservation.getDriverId() == null || reservation.getDriverId().isBlank()) { // SỬA: .toString() không cần thiết
             throw new IllegalArgumentException("driverId is required");
         }
         if (reservation.getConnectorId() == null || reservation.getConnectorId().isBlank()) {
@@ -57,7 +58,7 @@ public class ReservationService {
      * Huỷ reservation
      */
     @Transactional
-    public void cancel(String id) {
+    public void cancel(@NonNull String id) { // SỬA: Long -> String
         Reservation r = repo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Reservation not found: " + id));
         
@@ -73,7 +74,7 @@ public class ReservationService {
      * Confirm reservation
      */
     @Transactional
-    public void confirm(String id) {
+    public void confirm(@NonNull String id) { // SỬA: Long -> String
         Reservation r = repo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Reservation not found: " + id));
         
@@ -105,7 +106,7 @@ public class ReservationService {
      */
     public List<Reservation> getByDriverId(String driverId) {
         return repo.findAll().stream()
-                .filter(r -> r.getDriverId().equals(driverId))
+                .filter(r -> r.getDriverId().equals(driverId)) // Sẽ hoạt động vì driverId giờ là String
                 .toList();
     }
 
@@ -114,7 +115,7 @@ public class ReservationService {
      */
     public List<Reservation> getActiveByDriverId(String driverId) {
         return repo.findAll().stream()
-                .filter(r -> r.getDriverId().equals(driverId))
+                .filter(r -> r.getDriverId().equals(driverId)) // Sẽ hoạt động
                 .filter(r -> "PENDING".equals(r.getStatus()) || "CONFIRMED".equals(r.getStatus()))
                 .toList();
     }
@@ -127,14 +128,14 @@ public class ReservationService {
                 .filter(r -> r.getConnectorId().equals(connectorId))
                 .filter(r -> !"CANCELLED".equals(r.getStatus()))
                 .filter(r -> !(r.getEndWindow().isBefore(start) || r.getEndWindow().isEqual(start) ||
-                               r.getStartWindow().isAfter(end) || r.getStartWindow().isEqual(end)))
+                              r.getStartWindow().isAfter(end) || r.getStartWindow().isEqual(end)))
                 .toList();
     }
 
     /**
      * Lấy chi tiết reservation
      */
-    public Optional<Reservation> getById(String id) {
+    public Optional<Reservation> getById(@NonNull String id) { // SỬA: Long -> String
         return repo.findById(id);
     }
 

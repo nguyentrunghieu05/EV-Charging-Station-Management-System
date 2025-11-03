@@ -26,7 +26,7 @@ public class ChargingPoint {
     private boolean online;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "station_id")
+    @JoinColumn(name = "station_id") // Sẽ khớp với `String id` của Station
     private Station station;
 
     public ChargingPoint() {
