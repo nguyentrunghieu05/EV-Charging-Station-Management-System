@@ -12,4 +12,4 @@ FLUSH PRIVILEGES;
 
 Run migration + compile: .\mvnw clean compile flyway:migrate
 
-Run server: ./mvnw spring-boot:run
+Run server: .\mvnw spring-boot:run
