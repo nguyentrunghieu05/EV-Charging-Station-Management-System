@@ -1,17 +1,25 @@
 package ut.edu.evcs.project_java.domain.station;
 
-import jakarta.persistence.*;
-import org.locationtech.jts.geom.Point; // Cần thiết cho V7 migration
-
 import java.util.Objects;
+
+import org.locationtech.jts.geom.Point; 
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "stations")
 public class Station {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID) // SỬA: Đổi từ IDENTITY (Long) sang UUID (String)
-    private String id; // SỬA: Đổi từ Long sang String
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
 
     @Column(nullable = false)
     private String name;
@@ -24,8 +32,10 @@ public class Station {
     @Column(nullable = false)
     private double lng;
 
-    @Column(name = "status")
-    private String status; 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 20)
+    private StationStatus status;
+
 
     @Column(name = "available_ports", nullable = false, columnDefinition = "INT DEFAULT 0")
     private int availablePorts;
@@ -33,12 +43,10 @@ public class Station {
     @Column(name = "location", nullable = false, columnDefinition = "POINT NOT NULL")
     private Point location;
 
-    // Constructor rỗng
     public Station() {
     }
 
-    // Constructor đầy đủ (đã cập nhật id thành String)
-    public Station(String id, String name, String address, double lat, double lng, String status, int availablePorts, Point location) {
+    public Station(String id, String name, String address, double lat, double lng, StationStatus status, int availablePorts, Point location) {
         this.id = id;
         this.name = name;
         this.address = address;
@@ -91,11 +99,11 @@ public class Station {
         this.lng = lng;
     }
 
-    public String getStatus() {
+    public StationStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(StationStatus status) {
         this.status = status;
     }
 
