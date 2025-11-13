@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,21 +14,25 @@ import ut.edu.evcs.project_java.domain.session.ChargingSession;
 import ut.edu.evcs.project_java.domain.tariff.TariffPlan;
 import ut.edu.evcs.project_java.repo.ChargingSessionRepository;
 import ut.edu.evcs.project_java.repo.TariffPlanRepository;
+import ut.edu.evcs.project_java.service.event.SessionStoppedEvent;
 
 @Service
 public class SessionService {
 
     private final ChargingSessionRepository sessionRepo;
     private final TariffPlanRepository tariffRepo;
+    private final ApplicationEventPublisher eventPublisher;
 
-    // Trạng thái dùng chung (để tránh “stringly-typed”)
     private static final String STATUS_STARTED = "STARTED";
     private static final String STATUS_ACTIVE  = "ACTIVE";
     private static final String STATUS_STOPPED = "STOPPED";
 
-    public SessionService(ChargingSessionRepository sessionRepo, TariffPlanRepository tariffRepo) {
+    public SessionService(ChargingSessionRepository sessionRepo,
+                          TariffPlanRepository tariffRepo,
+                          ApplicationEventPublisher eventPublisher) {
         this.sessionRepo = sessionRepo;
         this.tariffRepo = tariffRepo;
+        this.eventPublisher = eventPublisher;
     }
 
     // ============= STOP SESSION =============
@@ -35,6 +40,7 @@ public class SessionService {
     public ChargingSession stopSession(String sessionId, BigDecimal finalKwh) {
         ChargingSession s = sessionRepo.findById(sessionId)
                 .orElseThrow(() -> new RuntimeException("Session not found: " + sessionId));
+
         String st = s.getStatus() == null ? "" : s.getStatus().toUpperCase();
         if (!(STATUS_STARTED.equals(st) || STATUS_ACTIVE.equals(st))) {
             throw new RuntimeException("Session not active; current status: " + st);
@@ -62,7 +68,9 @@ public class SessionService {
         s.setTotalCost(breakdown.getTotal());
         s.setStatus(STATUS_STOPPED);
 
-        return sessionRepo.save(s);
+        ChargingSession saved = sessionRepo.save(s);
+        eventPublisher.publishEvent(new SessionStoppedEvent(saved));
+        return saved;
     }
 
     // ============= COST CALCULATION =============
