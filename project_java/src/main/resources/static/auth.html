@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVCS - Đăng nhập</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 30px;
+            text-align: center;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .form-container {
+            padding: 40px 30px;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            color: #999;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+        
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            border-left: 4px solid #c33;
+        }
+        
+        .success {
+            background: #efe;
+            color: #3c3;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            border-left: 4px solid #3c3;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ EVCS</h1>
+            <p>Hệ thống quản lý trạm sạc xe điện</p>
+        </div>
+        
+        <div class="form-container">
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('login', this)">Đăng nhập</div>
+                <div class="tab" onclick="switchTab('register', this)">Đăng ký</div>
+            </div>
+            
+            <div id="message"></div>
+            
+            <!-- Login Form -->
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Email hoặc Username</label>
+                    <input type="text" name="emailOrUsername" required placeholder="Nhập email hoặc username">
+                </div>
+                <div class="form-group">
+                    <label>Mật khẩu</label>
+                    <input type="password" name="password" required placeholder="Nhập mật khẩu">
+                </div>
+                <button type="submit" class="btn">Đăng nhập</button>
+            </form>
+            
+            <!-- Register Form -->
+            <form id="registerForm" class="hidden" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" required placeholder="example@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" name="username" required placeholder="username" minlength="3" maxlength="32">
+                </div>
+                <div class="form-group">
+                    <label>Họ tên</label>
+                    <input type="text" name="fullName" required placeholder="Nguyễn Văn A">
+                </div>
+                <div class="form-group">
+                    <label>Số điện thoại</label>
+                    <input type="tel" name="phone" placeholder="0901234567">
+                </div>
+                <div class="form-group">
+                    <label>Mật khẩu</label>
+                    <input type="password" name="password" required placeholder="Tối thiểu 6 ký tự" minlength="6">
+                </div>
+                <button type="submit" class="btn">Đăng ký</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        
+        function switchTab(tab, elem) {
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(t => t.classList.remove('active'));
+            if (elem) elem.classList.add('active');
+            
+            document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
+            document.getElementById('registerForm').classList.toggle('hidden', tab !== 'register');
+            document.getElementById('message').innerHTML = '';
+        }
+        
+        function showMessage(msg, type = 'error') {
+            const msgDiv = document.getElementById('message');
+            msgDiv.className = type;
+            msgDiv.textContent = msg;
+            setTimeout(() => {
+                msgDiv.className = '';
+                msgDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const form = e.target;
+            const btn = form.querySelector('button');
+            btn.disabled = true;
+            btn.textContent = 'Đang đăng nhập...';
+            
+            try {
+                const res = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        emailOrUsername: form.emailOrUsername.value,
+                        password: form.password.value
+                    })
+                });
+                
+                const data = await res.json().catch(() => ({}));
+                
+                if (res.ok) {
+                    localStorage.setItem('accessToken', data.accessToken);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    showMessage('Đăng nhập thành công! Đang chuyển hướng...', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'home.html';
+                    }, 1000);
+                } else {
+                    showMessage(data.message || 'Đăng nhập thất bại');
+                }
+            } catch (err) {
+                showMessage('Lỗi kết nối: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Đăng nhập';
+            }
+        }
+        
+        async function handleRegister(e) {
+            e.preventDefault();
+            const form = e.target;
+            const btn = form.querySelector('button');
+            btn.disabled = true;
+            btn.textContent = 'Đang đăng ký...';
+            
+            try {
+                const res = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: form.email.value,
+                        username: form.username.value,
+                        fullName: form.fullName.value,
+                        phone: form.phone.value || null,
+                        password: form.password.value
+                    })
+                });
+                
+                const data = await res.json().catch(() => ({}));
+                
+                if (res.ok) {
+                    localStorage.setItem('accessToken', data.accessToken);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    showMessage('Đăng ký thành công! Đang chuyển hướng...', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'home.html';
+                    }, 1000);
+                } else {
+                    showMessage(data.message || 'Đăng ký thất bại');
+                }
+            } catch (err) {
+                showMessage('Lỗi kết nối: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Đăng ký';
+            }
+        }
+        
+        if (localStorage.getItem('accessToken')) {
+            window.location.href = 'home.html';
+        }
+    </script>
+</body>
+</html>

@@ -1,14 +1,16 @@
 package ut.edu.evcs.project_java.service;
 
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import ut.edu.evcs.project_java.domain.station.Station;
-import ut.edu.evcs.project_java.repo.StationRepository;
-import ut.edu.evcs.project_java.repo.ConnectorRepository;
-
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import ut.edu.evcs.project_java.domain.station.Station;
+import ut.edu.evcs.project_java.domain.station.StationStatus;
+import ut.edu.evcs.project_java.repo.ConnectorRepository;
+import ut.edu.evcs.project_java.repo.StationRepository;
 
 @Service
 public class StationService {
@@ -32,13 +34,12 @@ public class StationService {
     
     /**
      * Tìm trạm sạc trong bán kính radiusKm từ vị trí (lat, lng)
-     * Sử dụng công thức Haversine để tính khoảng cách
      */
     public List<Station> findNearby(double lat, double lng, double radiusKm, int limit) {
         List<Station> all = repo.findAll();
         
         return all.stream()
-                .filter(s -> "ONLINE".equalsIgnoreCase(s.getStatus())) // chỉ lấy trạm online
+                .filter(s -> StationStatus.ONLINE.equals(s.getStatus()))
                 .map(station -> new StationWithDistance(station, calculateDistance(lat, lng, station.getLat(), station.getLng())))
                 .filter(swd -> swd.distance <= radiusKm)
                 .sorted(Comparator.comparingDouble(swd -> swd.distance))
@@ -49,7 +50,6 @@ public class StationService {
 
     /**
      * Tính khoảng cách giữa 2 điểm (Haversine formula)
-     * @return khoảng cách tính bằng km
      */
     private double calculateDistance(double lat1, double lng1, double lat2, double lng2) {
         final double EARTH_RADIUS_KM = 6371.0;
@@ -86,7 +86,6 @@ public class StationService {
                 .toList();
     }
 
-    // Helper class để lưu trữ station với khoảng cách
     private static class StationWithDistance {
         final Station station;
         final double distance;
