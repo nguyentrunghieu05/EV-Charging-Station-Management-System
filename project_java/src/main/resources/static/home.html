@@ -262,6 +262,9 @@
                 <button class="action-btn" onclick="openVehicles()">
                     Quản lý xe
                 </button>
+                <button class="action-btn" onclick="openSessions()">
+                    Lịch sử sạc
+                </button>
                 <button class="action-btn" onclick="openWallet()">
                     Nạp tiền
                 </button>
@@ -407,7 +410,11 @@
 }
         
         function openVehicles() {
-            alert('Tính năng quản lý xe - Sẽ được phát triển tiếp');
+            window.location.href = 'vehicles.html';
+        }
+        
+        function openSessions() {
+            window.location.href = 'sessions.html';
         }
         
         function openWallet() {

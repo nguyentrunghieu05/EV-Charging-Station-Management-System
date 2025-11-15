@@ -62,6 +62,9 @@ public class SecurityConfig {
                     "/favicon.ico",
                     "/stations.html",
                     "/reservation.html",
+                    //thêm lịch sử sạc và xe
+                    "/vehicles.html",
+                    "/sessions.html",
 
                     "/assets/**",
                     "/static/**",
