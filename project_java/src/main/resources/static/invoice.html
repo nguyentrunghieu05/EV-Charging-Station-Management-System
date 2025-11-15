@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVCS - Hóa đơn điện tử</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:#f5f7fa}
+        .navbar{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:15px 30px;display:flex;justify-content:space-between;align-items:center}
+        .container{max-width:800px;margin:30px auto;padding:0 20px}
+        .invoice-container{background:#fff;padding:40px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.1);margin-bottom:20px}
+        .invoice-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:40px;padding-bottom:30px;border-bottom:2px solid #667eea}
+        .company-info h1{color:#667eea;font-size:28px;margin-bottom:10px}
+        .company-info p{color:#666;font-size:14px;margin:2px 0}
+        .invoice-meta{text-align:right}
+        .invoice-meta h2{color:#333;font-size:24px;margin-bottom:10px}
+        .invoice-meta p{color:#666;font-size:14px;margin:4px 0}
+        .invoice-status{display:inline-block;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:600;text-transform:uppercase;margin-top:10px}
+        .invoice-status.paid{background:#e8f5e9;color:#2e7d32}
+        .invoice-status.pending{background:#fff3e0;color:#f57c00}
+        .invoice-status.failed{background:#ffebee;color:#c62828}
+        .client-section{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-bottom:40px}
+        .client-info h3{color:#667eea;margin-bottom:15px;font-size:16px}
+        .client-info p{margin:5px 0;color:#333;font-size:14px}
+        .session-details{background:#f8f9ff;padding:20px;border-radius:8px;margin-bottom:30px}
+        .session-details h3{color:#667eea;margin-bottom:15px;font-size:16px}
+        .detail-row{display:flex;justify-content:space-between;margin:8px 0;padding:5px 0;border-bottom:1px solid #eee}
+        .detail-row:last-child{border-bottom:none}
+        .detail-label{font-weight:600;color:#555}
+        .detail-value{font-weight:500;color:#333}
+        .invoice-table{width:100%;border-collapse:collapse;margin-bottom:30px}
+        .invoice-table th{background:#667eea;color:#fff;padding:12px;text-align:left;font-weight:600}
+        .invoice-table td{padding:12px;border-bottom:1px solid #eee}
+        .invoice-table tr:last-child td{border-bottom:none}
+        .totals-section{margin-top:30px;padding-top:20px;border-top:2px solid #667eea}
+        .total-row{display:flex;justify-content:space-between;margin:8px 0;padding:5px 0}
+        .total-row.grand-total{font-weight:bold;font-size:18px;color:#667eea;border-top:2px solid #667eea;padding-top:15px;margin-top:15px}
+        .action-buttons{display:flex;gap:15px;justify-content:center;margin-top:40px}
+        .btn{padding:12px 24px;border:none;border-radius:8px;font-weight:600;cursor:pointer;transition:all 0.3s;font-size:16px}
+        .btn-primary{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(102,126,234,0.4)}
+        .btn-secondary{background:#f0f0f0;color:#666}
+        .btn-secondary:hover{background:#e0e0e0}
+        .btn-success{background:linear-gradient(135deg,#4caf50 0%,#388e3c 100%);color:#fff}
+        .btn-success:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(76,175,80,0.4)}
+        .alert{padding:15px;border-radius:8px;margin:15px 0;text-align:center}
+        .alert.success{background:#e8f5e9;color:#2e7d32}
+        .alert.error{background:#ffebee;color:#c62828}
+        .alert.info{background:#e3f2fd;color:#1565c0}
+        .loading{text-align:center;padding:40px}
+        .spinner{width:50px;height:50px;border:5px solid #f3f3f3;border-top:5px solid #667eea;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px}
+        @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+        .hidden{display:none}
+        .print-header{display:none}
+        @media print{
+            body{background:#fff}
+            .navbar,.action-buttons{display:none}
+            .invoice-container{box-shadow:none;border:1px solid #ddd}
+            .print-header{display:block;text-align:center;margin-bottom:30px;color:#667eea}
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>⚡ EVCS - Hóa đơn điện tử</h1>
+        <div>
+            <a href="home.html" style="color:#fff;text-decoration:none;margin-right:10px">Trang chủ</a>
+            <a href="sessions.html" style="color:#fff;text-decoration:none">Lịch sử</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="message"></div>
+        
+        <div class="invoice-container" id="invoiceContainer">
+            <div class="print-header">
+                <h1>⚡ EVCS - HÓA ĐƠN ĐIỆN TỬ</h1>
+                <p>Cảm ơn quý khách đã sử dụng dịch vụ của chúng tôi</p>
+            </div>
+
+            <div class="invoice-header">
+                <div class="company-info">
+                    <h1>EVCS VIỆT NAM</h1>
+                    <p>Địa chỉ: 123 Nguyễn Trãi, Quận 1, TP.HCM</p>
+                    <p>Điện thoại: (028) 1234-5678</p>
+                    <p>Email: support@evcs.vn</p>
+                    <p>MST: 0123456789</p>
+                </div>
+                <div class="invoice-meta">
+                    <h2>HÓA ĐƠN ĐIỆN TỬ</h2>
+                    <p>Số: <strong id="invoiceNumber">--</strong></p>
+                    <p>Ngày: <strong id="invoiceDate">--</strong></p>
+                    <div class="invoice-status" id="invoiceStatus">--</div>
+                </div>
+            </div>
+
+            <div class="client-section">
+                <div class="client-info">
+                    <h3>Thông tin khách hàng</h3>
+                    <p><strong id="customerName">--</strong></p>
+                    <p>Điện thoại: <span id="customerPhone">--</span></p>
+                    <p>Email: <span id="customerEmail">--</span></p>
+                    <p>Địa chỉ: <span id="customerAddress">--</span></p>
+                </div>
+                <div class="client-info">
+                    <h3>Thông tin phiên sạc</h3>
+                    <p>Mã phiên: <strong id="sessionCode">--</strong></p>
+                    <p>Trạm sạc: <span id="stationName">--</span></p>
+                    <p>Connector: <span id="connectorType">--</span></p>
+                    <p>Thời gian: <span id="sessionDuration">--</span></p>
+                </div>
+            </div>
+
+            <table class="invoice-table">
+                <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Dịch vụ</th>
+                        <th>Đơn vị</th>
+                        <th>Số lượng</th>
+                        <th>Đơn giá</th>
+                        <th>Thành tiền</th>
+                    </tr>
+                </thead>
+                <tbody id="invoiceItems">
+                    <tr><td colspan="6" style="text-align:center">Đang tải dữ liệu...</td></tr>
+                </tbody>
+            </table>
+
+            <div class="totals-section">
+                <div class="total-row">
+                    <span>Cộng tiền hàng:</span>
+                    <span id="subtotal">-- đ</span>
+                </div>
+                <div class="total-row">
+                    <span>Phí dịch vụ:</span>
+                    <span id="serviceFee">-- đ</span>
+                </div>
+                <div class="total-row">
+                    <span>Thuế VAT (10%):</span>
+                    <span id="vatAmount">-- đ</span>
+                </div>
+                <div class="total-row grand-total">
+                    <span>TỔNG CỘNG:</span>
+                    <span id="grandTotal">-- đ</span>
+                </div>
+            </div>
+
+            <div style="margin-top:40px;padding:20px;background:#f8f9ff;border-radius:8px">
+                <p style="font-weight:600;color:#667eea;margin-bottom:10px">Ghi chú:</p>
+                <p style="font-size:14px;color:#666;margin-bottom:5px">- Hóa đơn này được phát hành tự động bởi hệ thống EVCS</p>
+                <p style="font-size:14px;color:#666;margin-bottom:5px">- Vui lòng liên hệ hotline (028) 1234-5678 nếu cần hỗ trợ</p>
+                <p style="font-size:14px;color:#666">- Cảm ơn quý khách đã sử dụng dịch vụ của chúng tôi!</p>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-primary" onclick="downloadPDF()">📄 Tải PDF</button>
+            <button class="btn btn-secondary" onclick="printInvoice()">🖨️ In hóa đơn</button>
+            <button class="btn btn-success" onclick="sendEmail()">📧 Gửi email</button>
+            <button class="btn btn-secondary" onclick="goHome()">🏠 Trang chủ</button>
+        </div>
+
+        <div class="loading hidden" id="loadingSection">
+            <div class="spinner"></div>
+            <p>Đang xử lý...</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let token = localStorage.getItem('accessToken');
+        let user = JSON.parse(localStorage.getItem('user') || '{}');
+        let invoiceData = null;
+
+        if (!token) {
+            window.location.href = 'auth.html';
+        }
+
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.getElementById('message');
+            alertDiv.className = `alert ${type}`;
+            alertDiv.textContent = message;
+            alertDiv.style.display = 'block';
+            setTimeout(() => {
+                alertDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        async function refreshAccessToken() {
+            try {
+                const res = await fetch(`${API_BASE}/auth/refresh`, { method: 'POST' });
+                if (!res.ok) return false;
+                const data = await res.json();
+                if (data && data.accessToken) {
+                    localStorage.setItem('accessToken', data.accessToken);
+                    token = data.accessToken;
+                    return true;
+                }
+                return false;
+            } catch { return false; }
+        }
+
+        async function fetchWithAuth(url, options = {}) {
+            const opts = Object.assign({}, options);
+            opts.headers = Object.assign({}, opts.headers, { 'Authorization': `Bearer ${token}` });
+            let res = await fetch(url, opts);
+            if (res.status === 401 || res.status === 403) {
+                if (await refreshAccessToken()) {
+                    opts.headers['Authorization'] = `Bearer ${token}`;
+                    res = await fetch(url, opts);
+                } else {
+                    // If refresh fails, redirect to login
+                    window.location.href = 'auth.html';
+                    return new Response(null, { status: 401 });
+                }
+            }
+            return res;
+        }
+
+        // Initialize invoice page
+        async function initInvoice() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const invoiceId = urlParams.get('invoiceId');
+            
+            if (!invoiceId) {
+                showAlert('Không tìm thấy mã hóa đơn', 'error');
+                setTimeout(() => window.location.href = 'home.html', 3000);
+                return;
+            }
+
+            try {
+                showAlert('Đang tải hóa đơn...', 'info');
+                
+                // Load invoice details
+                const invoiceRes = await fetchWithAuth(`${API_BASE}/invoices/${invoiceId}`);
+                if (!invoiceRes.ok) throw new Error('Không thể tải hóa đơn');
+                invoiceData = await invoiceRes.json();
+
+                // Load session details
+                const sessionRes = await fetchWithAuth(`${API_BASE}/sessions/${invoiceData.sessionId}`);
+                if (sessionRes.ok) {
+                    const sessionData = await sessionRes.json();
+                    invoiceData.session = sessionData;
+                }
+
+                displayInvoice();
+                
+            } catch (err) {
+                showAlert(err.message, 'error');
+                setTimeout(() => window.location.href = 'home.html', 3000);
+            }
+        }
+
+        function displayInvoice() {
+            if (!invoiceData) return;
+
+            // Display invoice header
+            document.getElementById('invoiceNumber').textContent = invoiceData.invoiceNo || invoiceData.id;
+            document.getElementById('invoiceDate').textContent = formatDate(invoiceData.issuedAt);
+            
+            const statusElement = document.getElementById('invoiceStatus');
+            const statusNorm = (invoiceData.status || '').toUpperCase() === 'ISSUED' ? 'PENDING' : (invoiceData.status || 'PENDING');
+            statusElement.textContent = getStatusText(statusNorm);
+            statusElement.className = `invoice-status ${statusNorm.toLowerCase()}`;
+
+            // Display customer info
+            document.getElementById('customerName').textContent = user.fullName || user.email || 'Khách hàng';
+            document.getElementById('customerPhone').textContent = user.phone || 'N/A';
+            document.getElementById('customerEmail').textContent = user.email || 'N/A';
+            document.getElementById('customerAddress').textContent = user.address || 'N/A';
+
+            // Display session info
+            if (invoiceData.session) {
+                document.getElementById('sessionCode').textContent = invoiceData.session.id;
+                document.getElementById('stationName').textContent = invoiceData.session.stationName || 'N/A';
+                document.getElementById('connectorType').textContent = invoiceData.session.connectorType || 'N/A';
+                document.getElementById('sessionDuration').textContent = formatDuration(invoiceData.session.startTime, invoiceData.session.endTime);
+            }
+
+            // Display invoice items
+            displayInvoiceItems();
+
+            // Display totals
+            const energyCost = invoiceData.session?.energyCost || 0;
+            const timeCost = invoiceData.session?.timeCost || 0;
+            const idleFee = invoiceData.session?.idleFee || 0;
+            const subtotal = Number(energyCost) + Number(timeCost) + Number(idleFee);
+            document.getElementById('subtotal').textContent = formatCurrency(subtotal);
+            document.getElementById('serviceFee').textContent = formatCurrency(Number(timeCost) + Number(idleFee));
+            document.getElementById('vatAmount').textContent = formatCurrency(invoiceData.taxAmount || 0);
+            document.getElementById('grandTotal').textContent = formatCurrency(invoiceData.totalAmount || 0);
+        }
+
+        function displayInvoiceItems() {
+            const tbody = document.getElementById('invoiceItems');
+            
+            // Energy consumption item
+            const kwh = invoiceData.session?.kwhDelivered || 0;
+            const energyAmount = invoiceData.session?.energyCost || 0;
+            const unitPrice = kwh > 0 ? (Number(energyAmount) / Number(kwh)) : 0;
+            const items = [
+                {
+                    stt: 1,
+                    service: 'Dịch vụ sạc điện xe hơi',
+                    unit: 'kWh',
+                    quantity: Number(kwh).toFixed(2),
+                    unitPrice: formatCurrency(unitPrice),
+                    amount: formatCurrency(energyAmount || 0)
+                },
+                {
+                    stt: 2,
+                    service: 'Phí dịch vụ',
+                    unit: 'Lần',
+                    quantity: '1',
+                    unitPrice: formatCurrency(Number(timeCost) + Number(idleFee)),
+                    amount: formatCurrency(Number(timeCost) + Number(idleFee))
+                }
+            ];
+
+            tbody.innerHTML = items.map(item => `
+                <tr>
+                    <td>${item.stt}</td>
+                    <td>${item.service}</td>
+                    <td>${item.unit}</td>
+                    <td>${item.quantity}</td>
+                    <td>${item.unitPrice}</td>
+                    <td>${item.amount}</td>
+                </tr>
+            `).join('');
+        }
+
+        async function downloadPDF() {
+            try {
+                showAlert('Đang tạo file PDF...', 'info');
+                
+                const pdfRes = await fetchWithAuth(`${API_BASE}/invoices/${invoiceData.id}/pdf`);
+                if (!pdfRes.ok) throw new Error('Không thể tạo file PDF');
+
+                const blob = await pdfRes.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `hoadon_${invoiceData.invoiceNumber || invoiceData.id}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+
+                showAlert('Đã tải xuống file PDF thành công!', 'success');
+            } catch (err) {
+                showAlert(err.message, 'error');
+            }
+        }
+
+        function printInvoice() {
+            window.print();
+        }
+
+        async function sendEmail() {
+            try {
+                showAlert('Đang gửi email...', 'info');
+                
+                const emailRes = await fetchWithAuth(`${API_BASE}/invoices/${invoiceData.id}/send-email`, {
+                    method: 'POST'
+                });
+
+                if (!emailRes.ok) throw new Error('Không thể gửi email');
+
+                showAlert('Đã gửi email thành công!', 'success');
+            } catch (err) {
+                showAlert(err.message, 'error');
+            }
+        }
+
+        function goHome() {
+            window.location.href = 'home.html';
+        }
+
+        // Utility functions
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            }).format(amount);
+        }
+
+        function formatDate(timestamp) {
+            if (!timestamp) return '--';
+            return new Date(timestamp).toLocaleDateString('vi-VN');
+        }
+
+        function formatDuration(startTime, endTime) {
+            if (!startTime || !endTime) return '--';
+            const start = new Date(startTime);
+            const end = new Date(endTime);
+            const diff = Math.floor((end - start) / 1000); // seconds
+            const hours = Math.floor(diff / 3600);
+            const minutes = Math.floor((diff % 3600) / 60);
+            return `${hours}h ${minutes}m`;
+        }
+
+        function getStatusText(status) {
+            switch (status?.toUpperCase()) {
+                case 'PENDING': return 'Chưa thanh toán';
+                case 'PAID': return 'Đã thanh toán';
+                case 'FAILED': return 'Thanh toán thất bại';
+                case 'CANCELLED': return 'Đã hủy';
+                default: return 'Không xác định';
+            }
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            initInvoice();
+        });
+    </script>
+</body>
+</html>

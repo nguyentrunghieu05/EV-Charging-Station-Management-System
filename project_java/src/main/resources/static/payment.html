@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVCS - Thanh toán</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:#f5f7fa}
+        .navbar{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:15px 30px;display:flex;justify-content:space-between;align-items:center}
+        .container{max-width:900px;margin:30px auto;padding:0 20px}
+        .card{background:#fff;padding:30px;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.08);margin-bottom:20px}
+        .card h2{margin-bottom:20px;color:#333}
+        .invoice-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;padding-bottom:20px;border-bottom:2px solid #f0f0f0}
+        .invoice-title{font-size:24px;font-weight:bold;color:#333}
+        .invoice-date{font-size:14px;color:#666}
+        .invoice-status{padding:8px 16px;border-radius:20px;font-size:12px;font-weight:600;text-transform:uppercase}
+        .invoice-status.pending{background:#fff3e0;color:#f57c00}
+        .invoice-status.paid{background:#e8f5e9;color:#2e7d32}
+        .invoice-status.failed{background:#ffebee;color:#c62828}
+        .session-details{background:#f8f9ff;padding:20px;border-radius:8px;margin-bottom:20px}
+        .detail-row{display:flex;justify-content:space-between;margin:10px 0;padding:8px 0;border-bottom:1px solid #eee}
+        .detail-row:last-child{border-bottom:none}
+        .detail-label{font-weight:600;color:#555}
+        .detail-value{font-weight:500;color:#333}
+        .cost-breakdown{background:#f8f9ff;padding:20px;border-radius:8px;margin-bottom:20px}
+        .cost-item{display:flex;justify-content:space-between;margin:8px 0;padding:5px 0}
+        .cost-total{display:flex;justify-content:space-between;margin-top:15px;padding-top:15px;border-top:2px solid #667eea;font-weight:bold;font-size:18px;color:#667eea}
+        .payment-methods{margin-bottom:20px}
+        .payment-option{display:flex;align-items:center;padding:15px;border:2px solid #eee;border-radius:8px;margin-bottom:10px;cursor:pointer;transition:all 0.3s}
+        .payment-option:hover{border-color:#667eea}
+        .payment-option.selected{border-color:#667eea;background:#f8f9ff}
+        .payment-option input[type="radio"]{margin-right:15px}
+        .payment-icon{width:40px;height:40px;margin-right:15px;font-size:24px;text-align:center}
+        .payment-info{flex:1}
+        .payment-name{font-weight:600;margin-bottom:4px}
+        .payment-desc{font-size:14px;color:#666}
+        .wallet-balance{background:#e8f5e9;padding:10px;border-radius:6px;margin-top:10px;font-size:14px}
+        .action-buttons{display:flex;gap:15px;justify-content:center;margin-top:30px}
+        .btn{padding:12px 24px;border:none;border-radius:8px;font-weight:600;cursor:pointer;transition:all 0.3s;font-size:16px;min-width:120px}
+        .btn-primary{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(102,126,234,0.4)}
+        .btn-secondary{background:#f0f0f0;color:#666}
+        .btn-secondary:hover{background:#e0e0e0}
+        .btn:disabled{background:#ccc;cursor:not-allowed;transform:none}
+        .alert{padding:15px;border-radius:8px;margin:15px 0;text-align:center}
+        .alert.success{background:#e8f5e9;color:#2e7d32}
+        .alert.error{background:#ffebee;color:#c62828}
+        .alert.info{background:#e3f2fd;color:#1565c0}
+        .loading{text-align:center;padding:40px}
+        .spinner{width:50px;height:50px;border:5px solid #f3f3f3;border-top:5px solid #667eea;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px}
+        @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+        .hidden{display:none}
+        .qr-code{background:#fff;padding:20px;border:2px solid #eee;border-radius:8px;text-align:center;margin:20px 0}
+        .qr-placeholder{width:200px;height:200px;margin:0 auto;display:flex;align-items:center;justify-content:center;background:#f8f9ff;border:2px dashed #667eea;border-radius:8px}
+        .qr-placeholder .icon{font-size:48px;color:#667eea}
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>⚡ EVCS - Thanh toán</h1>
+        <div>
+            <a href="home.html" style="color:#fff;text-decoration:none;margin-right:10px">Trang chủ</a>
+            <a href="sessions.html" style="color:#fff;text-decoration:none">Lịch sử</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="message"></div>
+        
+        <div class="card" id="paymentCard">
+            <div class="invoice-header">
+                <div>
+                    <div class="invoice-title">Hóa đơn thanh toán</div>
+                    <div class="invoice-date" id="invoiceDate">Đang tải...</div>
+                </div>
+                <div class="invoice-status pending" id="invoiceStatus">Chưa thanh toán</div>
+            </div>
+
+            <div class="session-details">
+                <h3 style="margin-bottom:15px;color:#667eea">Thông tin phiên sạc</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Mã phiên:</span>
+                    <span class="detail-value" id="sessionCode">--</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Trạm sạc:</span>
+                    <span class="detail-value" id="stationName">--</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Connector:</span>
+                    <span class="detail-value" id="connectorType">--</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Thời gian bắt đầu:</span>
+                    <span class="detail-value" id="startTime">--</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Thời gian kết thúc:</span>
+                    <span class="detail-value" id="endTime">--</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Tổng thời gian:</span>
+                    <span class="detail-value" id="duration">--</span>
+                </div>
+            </div>
+
+            <div class="cost-breakdown">
+                <h3 style="margin-bottom:15px;color:#667eea">Chi tiết thanh toán</h3>
+                <div class="cost-item">
+                    <span>Năng lượng tiêu thụ:</span>
+                    <span id="energyConsumed">-- kWh</span>
+                </div>
+                <div class="cost-item">
+                    <span>Đơn giá:</span>
+                    <span id="unitPrice">-- đ/kWh</span>
+                </div>
+                <div class="cost-item">
+                    <span>Phí dịch vụ:</span>
+                    <span id="serviceFee">-- đ</span>
+                </div>
+                <div class="cost-item">
+                    <span>Thuế VAT (10%):</span>
+                    <span id="vatAmount">-- đ</span>
+                </div>
+                <div class="cost-total">
+                    <span>Tổng cộng:</span>
+                    <span id="totalAmount">-- đ</span>
+                </div>
+            </div>
+
+            <div class="payment-methods">
+                <h3 style="margin-bottom:15px;color:#667eea">Phương thức thanh toán</h3>
+                
+                <div class="payment-option" onclick="selectPaymentMethod('wallet')">
+                    <input type="radio" name="paymentMethod" value="wallet" id="walletMethod">
+                    <div class="payment-icon">💳</div>
+                    <div class="payment-info">
+                        <div class="payment-name">Ví điện tử EVCS</div>
+                        <div class="payment-desc">Thanh toán nhanh chóng từ ví của bạn</div>
+                        <div class="wallet-balance" id="walletBalanceInfo">Số dư: -- đ</div>
+                    </div>
+                </div>
+
+                <div class="payment-option" onclick="selectPaymentMethod('banking')">
+                    <input type="radio" name="paymentMethod" value="banking" id="bankingMethod">
+                    <div class="payment-icon">🏦</div>
+                    <div class="payment-info">
+                        <div class="payment-name">Chuyển khoản ngân hàng</div>
+                        <div class="payment-desc">Thanh toán qua Internet Banking</div>
+                    </div>
+                </div>
+
+                <div class="payment-option" onclick="selectPaymentMethod('card')">
+                    <input type="radio" name="paymentMethod" value="card" id="cardMethod">
+                    <div class="payment-icon">💰</div>
+                    <div class="payment-info">
+                        <div class="payment-name">Thẻ tín dụng/Ghi nợ</div>
+                        <div class="payment-desc">Visa, Mastercard, JCB</div>
+                    </div>
+                </div>
+
+                <div class="payment-option" onclick="selectPaymentMethod('qr')">
+                    <input type="radio" name="paymentMethod" value="qr" id="qrMethod">
+                    <div class="payment-icon">📱</div>
+                    <div class="payment-info">
+                        <div class="payment-name">Mã QR</div>
+                        <div class="payment-desc">Quét mã để thanh toán</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-secondary" onclick="cancelPayment()">Hủy</button>
+                <button class="btn btn-primary" onclick="processPayment()" id="payButton">Thanh toán</button>
+            </div>
+        </div>
+
+        <div class="card hidden" id="qrCard">
+            <h2>Quét mã QR để thanh toán</h2>
+            <div class="qr-code">
+                <div class="qr-placeholder" id="qrPlaceholder">
+                    <div class="icon">📱</div>
+                </div>
+                <p>Mã QR thanh toán của bạn</p>
+                <div style="text-align:center;margin-top:15px">
+                    <button class="btn btn-secondary" onclick="backToPayment()">Quay lại</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="loading hidden" id="loadingSection">
+            <div class="spinner"></div>
+            <p>Đang xử lý thanh toán...</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let token = localStorage.getItem('accessToken');
+        let user = JSON.parse(localStorage.getItem('user') || '{}');
+        let currentSession = null;
+        let invoiceData = null;
+        let selectedPaymentMethod = null;
+
+        if (!token) {
+            window.location.href = 'auth.html';
+        }
+
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.getElementById('message');
+            alertDiv.className = `alert ${type}`;
+            alertDiv.textContent = message;
+            alertDiv.style.display = 'block';
+            setTimeout(() => {
+                alertDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        async function refreshAccessToken() {
+            try {
+                const res = await fetch(`${API_BASE}/auth/refresh`, { method: 'POST' });
+                if (!res.ok) return false;
+                const data = await res.json();
+                if (data && data.accessToken) {
+                    localStorage.setItem('accessToken', data.accessToken);
+                    token = data.accessToken;
+                    return true;
+                }
+                return false;
+            } catch { return false; }
+        }
+
+        async function fetchWithAuth(url, options = {}) {
+            const opts = Object.assign({}, options);
+            opts.headers = Object.assign({}, opts.headers, { 'Authorization': `Bearer ${token}` });
+            let res = await fetch(url, opts);
+            if (res.status === 401 || res.status === 403) {
+                if (await refreshAccessToken()) {
+                    opts.headers['Authorization'] = `Bearer ${token}`;
+                    res = await fetch(url, opts);
+                } else {
+                    // If refresh fails, redirect to login
+                    window.location.href = 'auth.html';
+                    return new Response(null, { status: 401 });
+                }
+            }
+            return res;
+        }
+
+        // Initialize payment page
+        async function initPayment() {
+            // Check if user is logged in first
+            if (!token || !user.id) {
+                window.location.href = 'auth.html';
+                return;
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionId = urlParams.get('sessionId');
+            
+            if (!sessionId) {
+                showAlert('Không tìm thấy mã phiên sạc', 'error');
+                setTimeout(() => window.location.href = 'home.html', 3000);
+                return;
+            }
+
+            try {
+                showAlert('Đang tải thông tin thanh toán...', 'info');
+                
+                // Load session details
+                const sessionRes = await fetchWithAuth(`${API_BASE}/sessions/${sessionId}`);
+                if (!sessionRes.ok) {
+                    if (sessionRes.status === 404) {
+                        throw new Error('Không tìm thấy phiên sạc');
+                    } else if (sessionRes.status === 403) {
+                        throw new Error('Bạn không có quyền xem phiên này');
+                    } else {
+                        throw new Error('Không thể tải thông tin phiên');
+                    }
+                }
+                currentSession = await sessionRes.json();
+                
+                // Generate or load invoice
+                const invoiceRes = await fetchWithAuth(`${API_BASE}/invoices/session/${sessionId}`);
+                if (!invoiceRes.ok) {
+                    if (invoiceRes.status === 404) {
+                        // Create new invoice if not exists
+                        const createRes = await fetchWithAuth(`${API_BASE}/invoices`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                sessionId: sessionId,
+                                userId: user.id
+                            })
+                        });
+                        if (!createRes.ok) {
+                            if (createRes.status === 403) {
+                                throw new Error('Bạn không có quyền tạo hóa đơn');
+                            } else {
+                                throw new Error('Không thể tạo hóa đơn');
+                            }
+                        }
+                        invoiceData = await createRes.json();
+                    } else {
+                        throw new Error('Không thể tải thông tin hóa đơn');
+                    }
+                } else {
+                    invoiceData = await invoiceRes.json();
+                }
+
+                // Load wallet balance
+                const walletRes = await fetchWithAuth(`${API_BASE}/wallets/user/${user.id}`);
+                if (walletRes.ok) {
+                    const wallet = await walletRes.json();
+                    document.getElementById('walletBalanceInfo').textContent = `Số dư: ${formatCurrency(wallet.balance)}`;
+                }
+
+                displayInvoice();
+                
+            } catch (err) {
+                showAlert(err.message, 'error');
+                // Thay vì chuyển về trang chủ ngay, thử tải lại hóa đơn sau một khoảng ngắn
+                setTimeout(async () => {
+                    try {
+                        const retryRes = await fetchWithAuth(`${API_BASE}/invoices/session/${sessionId}`);
+                        if (retryRes.ok) {
+                            invoiceData = await retryRes.json();
+                            displayInvoice();
+                        } else {
+                            // Giữ người dùng ở trang hiện tại để họ thử lại thanh toán sau
+                        }
+                    } catch (_) {}
+                }, 2000);
+            }
+        }
+
+        function displayInvoice() {
+            if (!invoiceData || !currentSession) return;
+
+            // Display session info
+            document.getElementById('sessionCode').textContent = currentSession.code || currentSession.id;
+            document.getElementById('stationName').textContent = currentSession.stationName || 'N/A';
+            document.getElementById('connectorType').textContent = currentSession.connectorType || 'N/A';
+            document.getElementById('startTime').textContent = formatDateTime(currentSession.startTime);
+            document.getElementById('endTime').textContent = formatDateTime(currentSession.endTime);
+            document.getElementById('duration').textContent = formatDuration(currentSession.startTime, currentSession.endTime);
+
+            // Display cost breakdown
+            const kwh = currentSession.kwhDelivered || 0;
+            const energyCost = currentSession.energyCost || 0;
+            const timeCost = currentSession.timeCost || 0;
+            const idleFee = currentSession.idleFee || 0;
+            const unitPrice = currentSession.unitPriceVnd ?? (kwh > 0 ? (Number(energyCost) / Number(kwh)) : 0);
+
+            document.getElementById('energyConsumed').textContent = `${Number(kwh).toFixed(2)} kWh`;
+            document.getElementById('unitPrice').textContent = `${formatCurrency(unitPrice)}/kWh`;
+            document.getElementById('serviceFee').textContent = formatCurrency(Number(timeCost) + Number(idleFee));
+            document.getElementById('vatAmount').textContent = formatCurrency(invoiceData.taxAmount || 0);
+            document.getElementById('totalAmount').textContent = formatCurrency(invoiceData.totalAmount || 0);
+
+            // Display invoice status
+            document.getElementById('invoiceDate').textContent = formatDateTime(invoiceData.issuedAt);
+            const statusElement = document.getElementById('invoiceStatus');
+            const statusNorm = (invoiceData.status || '').toUpperCase() === 'ISSUED' ? 'PENDING' : (invoiceData.status || 'PENDING');
+            statusElement.textContent = getStatusText(statusNorm);
+            statusElement.className = `invoice-status ${statusNorm.toLowerCase()}`;
+
+            // Update pay button
+            const payButton = document.getElementById('payButton');
+            if (invoiceData.status === 'PAID') {
+                payButton.textContent = 'Đã thanh toán';
+                payButton.disabled = true;
+            } else {
+                payButton.textContent = 'Thanh toán';
+                payButton.disabled = false;
+            }
+        }
+
+        function selectPaymentMethod(method) {
+            selectedPaymentMethod = method;
+            
+            // Update UI
+            document.querySelectorAll('.payment-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            const selectedOption = document.querySelector(`#${method}Method`).parentElement;
+            selectedOption.classList.add('selected');
+            document.querySelector(`#${method}Method`).checked = true;
+
+            // Show QR code for QR payment
+            if (method === 'qr') {
+                showQRCode();
+            }
+        }
+
+        function showQRCode() {
+            document.getElementById('paymentCard').classList.add('hidden');
+            document.getElementById('qrCard').classList.remove('hidden');
+            
+            // Generate QR code (simulated)
+            const qrPlaceholder = document.getElementById('qrPlaceholder');
+            qrPlaceholder.innerHTML = `
+                <div style="width:200px;height:200px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;border-radius:8px">
+                    <div style="text-align:center">
+                        <div style="font-size:48px;margin-bottom:10px">⚡</div>
+                        <div style="font-size:12px;color:#666">MÃ QR THANH TOÁN</div>
+                        <div style="font-size:10px;color:#999;margin-top:5px">${invoiceData?.id || ''}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function backToPayment() {
+            document.getElementById('qrCard').classList.add('hidden');
+            document.getElementById('paymentCard').classList.remove('hidden');
+        }
+
+        async function processPayment() {
+            if (!selectedPaymentMethod) {
+                showAlert('Vui lòng chọn phương thức thanh toán', 'error');
+                return;
+            }
+
+            if (!invoiceData || invoiceData.status === 'PAID') {
+                showAlert('Hóa đơn này đã được thanh toán', 'info');
+                return;
+            }
+
+            const payButton = document.getElementById('payButton');
+            const loadingSection = document.getElementById('loadingSection');
+            
+            payButton.disabled = true;
+            loadingSection.classList.remove('hidden');
+
+            try {
+                // Process payment based on selected method
+                const paymentRes = await fetchWithAuth(`${API_BASE}/payments`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        invoiceId: invoiceData.id,
+                        amount: invoiceData.totalAmount,
+                        paymentMethod: selectedPaymentMethod,
+                        userId: user.id
+                    })
+                });
+
+                if (!paymentRes.ok) {
+                    const error = await paymentRes.json();
+                    throw new Error(error.message || 'Thanh toán thất bại');
+                }
+
+                const paymentResult = await paymentRes.json();
+                
+                if (paymentResult.status === 'SUCCESS') {
+                    showAlert('Thanh toán thành công!', 'success');
+                    invoiceData.status = 'PAID';
+                    displayInvoice();
+                    setTimeout(() => { window.location.href = 'home.html'; }, 1500);
+                } else {
+                    throw new Error(paymentResult.message || 'Thanh toán thất bại');
+                }
+
+            } catch (err) {
+                showAlert(err.message, 'error');
+                payButton.disabled = false;
+            } finally {
+                loadingSection.classList.add('hidden');
+            }
+        }
+
+        function cancelPayment() {
+            if (confirm('Bạn có chắc chắn muốn hủy thanh toán?')) {
+                window.location.href = 'home.html';
+            }
+        }
+
+        // Utility functions
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            }).format(amount);
+        }
+
+        function formatDateTime(timestamp) {
+            if (!timestamp) return '--';
+            return new Date(timestamp).toLocaleString('vi-VN');
+        }
+
+        function formatDuration(startTime, endTime) {
+            const s = startTime ? new Date(startTime).getTime() : null;
+            const e = endTime ? new Date(endTime).getTime() : null;
+            if (!s && !e) return '--';
+            const diffSec = Math.floor(Math.abs((e ?? Date.now()) - (s ?? Date.now())) / 1000);
+            const hours = Math.floor(diffSec / 3600);
+            const minutes = Math.floor((diffSec % 3600) / 60);
+            return `${hours}h ${minutes}m`;
+        }
+
+        function getStatusText(status) {
+            switch (status?.toUpperCase()) {
+                case 'PENDING': return 'Chưa thanh toán';
+                case 'PAID': return 'Đã thanh toán';
+                case 'FAILED': return 'Thanh toán thất bại';
+                case 'CANCELLED': return 'Đã hủy';
+                default: return 'Không xác định';
+            }
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            initPayment();
+        });
+    </script>
+</body>
+</html>

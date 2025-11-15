@@ -59,6 +59,12 @@ public class SecurityConfig {
                     "/index.html",
                     "/auth.html",
                     "/home.html",
+                    // newly added public frontend pages
+                    "/scan.html",
+                    "/charging.html",
+                    "/payment.html",
+                    "/invoice.html",
+                    "/invoices.html",
                     "/favicon.ico",
                     "/stations.html",
                     "/reservation.html",

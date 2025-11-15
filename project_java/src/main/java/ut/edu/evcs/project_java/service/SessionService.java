@@ -88,7 +88,7 @@ public class SessionService {
 
         BigDecimal subtotal = energy.add(time).add(idle);
         BigDecimal vat = subtotal
-                .multiply(BigDecimal.valueOf(8).movePointLeft(2))
+                .multiply(BigDecimal.valueOf(10).movePointLeft(2))
                 .setScale(2, RoundingMode.HALF_UP);
         BigDecimal total = subtotal.add(vat).setScale(2, RoundingMode.HALF_UP);
 
@@ -144,6 +144,28 @@ public class SessionService {
         s.setStatus(STATUS_STARTED);
         s.setTariffId(activeTariff.getId());
 
+        return sessionRepo.save(s);
+    }
+
+    // ============= GET BY ID =============
+    public Optional<ChargingSession> getById(String id) {
+        return sessionRepo.findById(id);
+    }
+
+    // ============= UPDATE METRICS (from frontend simulation) =============
+    @Transactional
+    public ChargingSession updateMetrics(String id, Double energyKwh, Double totalCostVnd) {
+        ChargingSession s = sessionRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Session not found: " + id));
+        if (energyKwh != null) {
+            s.setKwhDelivered(Math.max(0d, energyKwh));
+        }
+        if (totalCostVnd != null) {
+            s.setTotalCost(BigDecimal.valueOf(totalCostVnd).setScale(2, RoundingMode.HALF_UP));
+        }
+        if (!STATUS_ACTIVE.equalsIgnoreCase(s.getStatus())) {
+            s.setStatus(STATUS_ACTIVE);
+        }
         return sessionRepo.save(s);
     }
 
