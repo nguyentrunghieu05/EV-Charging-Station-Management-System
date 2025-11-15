@@ -20,6 +20,9 @@ public class SessionResponse {
     private BigDecimal timeCost;
     private BigDecimal idleFee;
     private BigDecimal totalCost;
+    private String stationName;
+    private String connectorType;
+    private BigDecimal unitPriceVnd;
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -59,4 +62,13 @@ public class SessionResponse {
     
     public BigDecimal getTotalCost() { return totalCost; }
     public void setTotalCost(BigDecimal totalCost) { this.totalCost = totalCost; }
+
+    public String getStationName() { return stationName; }
+    public void setStationName(String stationName) { this.stationName = stationName; }
+
+    public String getConnectorType() { return connectorType; }
+    public void setConnectorType(String connectorType) { this.connectorType = connectorType; }
+
+    public BigDecimal getUnitPriceVnd() { return unitPriceVnd; }
+    public void setUnitPriceVnd(BigDecimal unitPriceVnd) { this.unitPriceVnd = unitPriceVnd; }
 }

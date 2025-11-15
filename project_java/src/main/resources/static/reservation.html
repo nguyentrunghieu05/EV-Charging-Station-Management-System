@@ -730,9 +730,9 @@
                 
                 const reservation = await res.json();
                 
-                showAlert('Đặt chỗ thành công! Đang chuyển về trang chủ...', 'success');
+                showAlert('Đặt chỗ thành công! Đang chuyển đến trang quét mã...', 'success');
                 setTimeout(() => {
-                    window.location.href = 'home.html';
+                    window.location.href = `scan.html?reservationId=${reservation.id}`;
                 }, 2000);
                 
             } catch (err) {

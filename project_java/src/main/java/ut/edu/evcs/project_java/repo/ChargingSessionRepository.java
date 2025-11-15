@@ -86,4 +86,6 @@ public interface ChargingSessionRepository extends JpaRepository<ChargingSession
             """, nativeQuery = true)
     Double avgDurationMinutes(@Param("from") LocalDateTime from,
                               @Param("to") LocalDateTime to);
+
+    java.util.List<ut.edu.evcs.project_java.domain.session.ChargingSession> findByDriverIdOrderByStartTimeDesc(String driverId);
 }

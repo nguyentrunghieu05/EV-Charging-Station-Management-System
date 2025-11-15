@@ -53,9 +53,27 @@
                         <th>Bắt đầu</th>
                         <th>Kết thúc</th>
                         <th>Trạng thái</th>
+                        <th>Thao tác</th>
                     </tr>
                 </thead>
-                <tbody id="reservationsTable"><tr><td colspan="5">Đang tải...</td></tr></tbody>
+                <tbody id="reservationsTable"><tr><td colspan="6">Đang tải...</td></tr></tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>Phiên sạc của tôi</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mã phiên</th>
+                        <th>Bắt đầu</th>
+                        <th>Kết thúc</th>
+                        <th>Năng lượng</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody id="sessionsTable"><tr><td colspan="6">Đang tải...</td></tr></tbody>
             </table>
         </div>
     </div>
@@ -130,7 +148,7 @@
             const tbody = document.getElementById('reservationsTable');
             let rows = items;
             if (currentFilter!=='ALL') rows = rows.filter(x => (x.status||'').toUpperCase()===currentFilter);
-            if (!rows.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">Không có dữ liệu</td></tr>'; return; }
+            if (!rows.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">Không có dữ liệu</td></tr>'; return; }
             tbody.innerHTML = rows.map(r => `
                 <tr>
                     <td>${r.id}</td>
@@ -138,11 +156,48 @@
                     <td>${fmt(r.startWindow)}</td>
                     <td>${fmt(r.endWindow)}</td>
                     <td>${badge(r.status)}</td>
+                    <td>${getActionButton(r)}</td>
                 </tr>
             `).join('');
         }
 
+        async function loadSessions() {
+            const tbody = document.getElementById('sessionsTable');
+            try {
+                const res = await fetchWithAuth(`${API_BASE}/sessions/me`);
+                if (!res.ok) throw new Error('Load sessions failed');
+                const items = await res.json();
+                tbody.innerHTML = items.length ? items.map(s => `
+                    <tr>
+                        <td>${s.id}</td>
+                        <td>${fmt(s.startTime)}</td>
+                        <td>${fmt(s.endTime)}</td>
+                        <td>${(s.kwhDelivered||0).toFixed(2)} kWh</td>
+                        <td><span class="badge ${((s.status||'').toLowerCase())}">${(s.status||'').toUpperCase()}</span></td>
+                        <td>${s.status==='STOPPED' ? `<button class="btn btn-primary" onclick="pay('${s.id}')">Thanh toán</button>` : ''}</td>
+                    </tr>
+                `).join('') : '<tr><td colspan="6" class="empty">Không có phiên sạc</td></tr>';
+            } catch { tbody.innerHTML = '<tr><td colspan="6">Lỗi tải dữ liệu</td></tr>'; }
+        }
+
+        function pay(sessionId) {
+            window.location.href = `payment.html?sessionId=${sessionId}`;
+        }
+
+        function getActionButton(reservation) {
+            const status = (reservation.status || '').toUpperCase();
+            if (status === 'CONFIRMED') {
+                return `<button class="btn btn-primary" onclick="startCharging('${reservation.id}')" style="padding:6px 12px;font-size:12px;background:#667eea;color:white;border:none;border-radius:4px;cursor:pointer;">Bắt đầu sạc</button>`;
+            }
+            return '';
+        }
+
+        function startCharging(reservationId) {
+            window.location.href = `scan.html?reservationId=${reservationId}`;
+        }
+
         loadReservations();
+        loadSessions();
     </script>
 </body>
 </html>

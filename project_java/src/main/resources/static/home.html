@@ -263,11 +263,17 @@
                 <button class="action-btn" onclick="openReservation()">
                     Đặt chỗ sạc
                 </button>
+                <button class="action-btn" onclick="openScan()">
+                    Quét mã bắt đầu sạc
+                </button>
                 <button class="action-btn" onclick="openVehicles()">
                     Quản lý xe
                 </button>
                 <button class="action-btn" onclick="openSessions()">
                     Lịch sử sạc
+                </button>
+                <button class="action-btn" onclick="openInvoices()">
+                    Hóa đơn
                 </button>
                 <button class="action-btn" onclick="openNotifications()">
                     Thông báo
@@ -434,8 +440,12 @@
         }
         
         function openReservation() {
-    window.location.href = 'stations.html';  // Hoặc '/stations.html' nếu cần
-}
+            window.location.href = 'stations.html';  // Hoặc '/stations.html' nếu cần
+        }
+        
+        function openScan() {
+            window.location.href = 'scan.html';
+        }
         
         function openVehicles() {
             window.location.href = 'vehicles.html';
@@ -443,6 +453,10 @@
         
         function openSessions() {
             window.location.href = 'sessions.html';
+        }
+        
+        function openInvoices() {
+            window.location.href = 'invoices.html';
         }
         
         function openNotifications() {

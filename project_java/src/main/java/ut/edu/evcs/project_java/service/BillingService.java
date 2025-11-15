@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,12 +32,16 @@ public class BillingService {
         ChargingSession s = sessionRepo.findById(sessionId)
                 .orElseThrow(() -> new RuntimeException("Session not found"));
 
-        if (!"STOPPED".equalsIgnoreCase(s.getStatus())) {
-            throw new RuntimeException("Session must be STOPPED to create invoice.");
+        Invoice existing = invoiceRepo.findFirstBySessionIdOrderByIssuedAtDesc(sessionId).orElse(null);
+        if (existing != null) {
+            return existing;
         }
 
-        BigDecimal subtotal = s.getEnergyCost().add(s.getTimeCost()).add(s.getIdleFee());
-        BigDecimal vat = subtotal.multiply(BigDecimal.valueOf(8).movePointLeft(2)).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal energy = s.getEnergyCost() == null ? BigDecimal.ZERO : s.getEnergyCost();
+        BigDecimal time = s.getTimeCost() == null ? BigDecimal.ZERO : s.getTimeCost();
+        BigDecimal idle = s.getIdleFee() == null ? BigDecimal.ZERO : s.getIdleFee();
+        BigDecimal subtotal = energy.add(time).add(idle).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal vat = subtotal.multiply(BigDecimal.valueOf(10).movePointLeft(2)).setScale(2, RoundingMode.HALF_UP);
         BigDecimal total = subtotal.add(vat).setScale(2, RoundingMode.HALF_UP);
 
         Invoice inv = new Invoice();
@@ -48,9 +54,30 @@ public class BillingService {
         inv.setInvoiceNo(generateInvoiceNo());
         inv = invoiceRepo.save(inv);
 
-        String pdfUrl = pdfService.generateInvoicePdf(inv.getId());
-        inv.setPdfUrl(pdfUrl);
+        try {
+            String pdfUrl = pdfService.generateInvoicePdf(inv.getId());
+            inv.setPdfUrl(pdfUrl);
+        } catch (RuntimeException e) {
+            inv.setPdfUrl(null);
+        }
         return invoiceRepo.save(inv);
+    }
+
+    public List<Invoice> ensureInvoicesForDriver(String driverId) {
+        List<ChargingSession> sessions = sessionRepo.findByDriverIdOrderByStartTimeDesc(driverId);
+        List<Invoice> result = new ArrayList<>();
+        for (ChargingSession s : sessions) {
+            boolean ended = s.getEndTime() != null || "STOPPED".equalsIgnoreCase(s.getStatus()) || "COMPLETED".equalsIgnoreCase(s.getStatus());
+            if (!ended) continue;
+            Invoice existing = invoiceRepo.findFirstBySessionIdOrderByIssuedAtDesc(s.getId()).orElse(null);
+            if (existing != null) {
+                result.add(existing);
+                continue;
+            }
+            Invoice created = createInvoice(s.getId());
+            result.add(created);
+        }
+        return result;
     }
 
     private String generateInvoiceNo() {

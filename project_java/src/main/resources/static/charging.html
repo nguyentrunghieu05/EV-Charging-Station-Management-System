@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVCS - Đang sạc</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:#f5f7fa}
+        .navbar{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:15px 30px;display:flex;justify-content:space-between;align-items:center}
+        .container{max-width:1000px;margin:30px auto;padding:0 20px}
+        .card{background:#fff;padding:30px;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.08);margin-bottom:20px}
+        .card h2{margin-bottom:20px;color:#333;text-align:center}
+        .charging-status{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-bottom:30px}
+        .status-item{background:#f8f9ff;padding:20px;border-radius:12px;text-align:center}
+        .status-item h3{color:#667eea;margin-bottom:10px;font-size:18px}
+        .status-value{font-size:32px;font-weight:bold;color:#333;margin:10px 0}
+        .status-unit{font-size:14px;color:#666}
+        .progress-container{margin:30px 0}
+        .progress-bar{height:20px;background:#e0e0e0;border-radius:10px;overflow:hidden;margin:10px 0}
+        .progress-fill{height:100%;background:linear-gradient(90deg,#667eea 0%,#764ba2 100%);border-radius:10px;transition:width 0.5s ease}
+        .progress-text{text-align:center;margin-top:10px;font-weight:600;color:#333}
+        .charging-details{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;margin:30px 0}
+        .detail-item{background:#f8f9ff;padding:15px;border-radius:8px;text-align:center}
+        .detail-item .label{font-size:14px;color:#666;margin-bottom:5px}
+        .detail-item .value{font-size:18px;font-weight:bold;color:#333}
+        .action-buttons{display:flex;gap:15px;justify-content:center;margin-top:30px}
+        .btn{padding:12px 24px;border:none;border-radius:8px;font-weight:600;cursor:pointer;transition:all 0.3s;font-size:16px}
+        .btn-primary{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(102,126,234,0.4)}
+        .btn-danger{background:linear-gradient(135deg,#f44336 0%,#d32f2f 100%);color:#fff}
+        .btn-danger:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(244,67,54,0.4)}
+        .btn:disabled{background:#ccc;cursor:not-allowed;transform:none}
+        .alert{padding:15px;border-radius:8px;margin:15px 0;text-align:center}
+        .alert.success{background:#e8f5e9;color:#2e7d32}
+        .alert.error{background:#ffebee;color:#c62828}
+        .alert.info{background:#e3f2fd;color:#1565c0}
+        .charging-indicator{text-align:center;margin:20px 0}
+        .charging-icon{font-size:48px;color:#667eea;animation:pulse 2s infinite}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+        .session-info{background:#f8f9ff;padding:20px;border-radius:8px;margin-bottom:20px}
+        .info-row{display:flex;justify-content:space-between;margin:8px 0;padding:5px 0;border-bottom:1px solid #eee}
+        .info-row:last-child{border-bottom:none}
+        .hidden{display:none}
+        .loading{text-align:center;padding:40px}
+        .spinner{width:50px;height:50px;border:5px solid #f3f3f3;border-top:5px solid #667eea;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px}
+        @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>⚡ EVCS - Đang sạc</h1>
+        <div>
+            <a href="home.html" style="color:#fff;text-decoration:none;margin-right:10px">Trang chủ</a>
+            <a href="sessions.html" style="color:#fff;text-decoration:none">Lịch sử</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="message"></div>
+        
+        <div class="card" id="chargingCard">
+            <h2>Trạng thái sạc</h2>
+            
+            <div class="charging-indicator">
+                <div class="charging-icon">⚡</div>
+                <p id="chargingStatusText">Đang kết nối...</p>
+            </div>
+            
+            <div class="charging-status">
+                <div class="status-item">
+                    <h3>Phần trăm pin</h3>
+                    <div class="status-value" id="batteryLevel">--</div>
+                    <div class="status-unit">%</div>
+                </div>
+                <div class="status-item">
+                    <h3>Thời gian còn lại</h3>
+                    <div class="status-value" id="timeRemaining">--</div>
+                    <div class="status-unit">phút</div>
+                </div>
+            </div>
+            
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+                <div class="progress-text" id="progressText">Đang tải dữ liệu...</div>
+            </div>
+            
+            <div class="charging-details">
+                <div class="detail-item">
+                    <div class="label">Công suất</div>
+                    <div class="value" id="power">-- kW</div>
+                </div>
+                <div class="detail-item">
+                    <div class="label">Dòng điện</div>
+                    <div class="value" id="current">-- A</div>
+                </div>
+                <div class="detail-item">
+                    <div class="label">Điện áp</div>
+                    <div class="value" id="voltage">-- V</div>
+                </div>
+                <div class="detail-item">
+                    <div class="label">Năng lượng</div>
+                    <div class="value" id="energy">-- kWh</div>
+                </div>
+            </div>
+            
+            <div class="session-info">
+                <h3>Thông tin phiên</h3>
+                <div class="info-row">
+                    <span>Mã phiên:</span>
+                    <span id="sessionId">--</span>
+                </div>
+                <div class="info-row">
+                    <span>Bắt đầu:</span>
+                    <span id="startTime">--</span>
+                </div>
+                <div class="info-row">
+                    <span>Thời gian:</span>
+                    <span id="duration">--</span>
+                </div>
+                <div class="info-row">
+                    <span>Chi phí:</span>
+                    <span id="cost">-- đ</span>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-danger" onclick="stopCharging()">Dừng sạc</button>
+                <button class="btn btn-primary" onclick="toggleNotifications()">Thông báo</button>
+            </div>
+        </div>
+        
+        <div class="loading hidden" id="loadingSection">
+            <div class="spinner"></div>
+            <p>Đang kết nối với trạm sạc...</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let token = localStorage.getItem('accessToken');
+        let user = JSON.parse(localStorage.getItem('user') || '{}');
+        let currentSession = null;
+        let wsConnection = null;
+        let chargingInterval = null;
+        let isCharging = false;
+
+        if (!token) {
+            window.location.href = 'auth.html';
+        }
+
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.getElementById('message');
+            alertDiv.className = `alert ${type}`;
+            alertDiv.textContent = message;
+            alertDiv.style.display = 'block';
+            setTimeout(() => {
+                alertDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        async function refreshAccessToken() {
+            try {
+                const res = await fetch(`${API_BASE}/auth/refresh`, { method: 'POST' });
+                if (!res.ok) return false;
+                const data = await res.json();
+                if (data && data.accessToken) {
+                    localStorage.setItem('accessToken', data.accessToken);
+                    token = data.accessToken;
+                    return true;
+                }
+                return false;
+            } catch { return false; }
+        }
+
+        async function fetchWithAuth(url, options = {}) {
+            const opts = Object.assign({}, options);
+            opts.headers = Object.assign({}, opts.headers, { 'Authorization': `Bearer ${token}` });
+            let res = await fetch(url, opts);
+            if (res.status === 401 || res.status === 403) {
+                if (await refreshAccessToken()) {
+                    opts.headers['Authorization'] = `Bearer ${token}`;
+                    res = await fetch(url, opts);
+                } else {
+                    // If refresh fails, redirect to login
+                    window.location.href = 'auth.html';
+                    return new Response(null, { status: 401 });
+                }
+            }
+            return res;
+        }
+
+        // Initialize charging session
+        async function initChargingSession() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionId = urlParams.get('sessionId');
+            
+            if (!sessionId) {
+                showAlert('Không tìm thấy mã phiên sạc', 'error');
+                setTimeout(() => window.location.href = 'home.html', 3000);
+                return;
+            }
+
+            try {
+                // Load session details
+                const res = await fetchWithAuth(`${API_BASE}/sessions/${sessionId}`);
+                if (!res.ok) throw new Error('Không thể tải thông tin phiên');
+                
+                currentSession = await res.json();
+                displaySessionInfo();
+                
+                // Connect to WebSocket for real-time updates
+                connectWebSocket(sessionId);
+                
+                // Start periodic updates
+                startChargingUpdates();
+                
+                isCharging = true;
+                document.getElementById('chargingStatusText').textContent = 'Đang sạc...';
+                
+            } catch (err) {
+                showAlert(err.message, 'error');
+                setTimeout(() => window.location.href = 'home.html', 3000);
+            }
+        }
+
+        function displaySessionInfo() {
+            if (!currentSession) return;
+
+            document.getElementById('sessionId').textContent = currentSession.code || currentSession.id;
+            document.getElementById('startTime').textContent = formatTime(currentSession.startTime);
+            document.getElementById('duration').textContent = formatDuration(currentSession.startTime);
+            
+            // Update charging parameters
+            if (currentSession.power) document.getElementById('power').textContent = currentSession.power + ' kW';
+            if (currentSession.current) document.getElementById('current').textContent = currentSession.current + ' A';
+            if (currentSession.voltage) document.getElementById('voltage').textContent = currentSession.voltage + ' V';
+            if (currentSession.energy) document.getElementById('energy').textContent = currentSession.energy.toFixed(2) + ' kWh';
+            if (currentSession.cost) document.getElementById('cost').textContent = formatCurrency(currentSession.cost);
+        }
+
+        function connectWebSocket(sessionId) {
+            // Simulate WebSocket connection (in real app, use actual WebSocket)
+            console.log('Connecting to WebSocket for session:', sessionId);
+            
+            // Simulate real-time updates
+            wsConnection = setInterval(() => {
+                if (isCharging) {
+                    updateChargingStatus();
+                }
+            }, 5000);
+        }
+
+        function updateChargingStatus() {
+            // Simulate charging data updates
+            const batteryLevel = Math.min(100, (currentSession.batteryLevel || 20) + Math.random() * 2);
+            const power = currentSession.power || 50;
+            const energy = (currentSession.energy || 0) + (power * (5 / 3600)); // 5 giây -> giờ
+            const cost = energy * 3000; // 3000 VND per kWh
+            const timeRemaining = Math.max(0, ((100 - batteryLevel) / (power / 60)) * 60); // minutes
+
+            // Update UI
+            document.getElementById('batteryLevel').textContent = batteryLevel.toFixed(1);
+            document.getElementById('timeRemaining').textContent = Math.round(timeRemaining);
+            document.getElementById('progressFill').style.width = batteryLevel + '%';
+            document.getElementById('progressText').textContent = `${batteryLevel.toFixed(1)}% - ${timeRemaining > 0 ? Math.round(timeRemaining) + ' phút còn lại' : 'Sạc đầy'}`;
+            document.getElementById('energy').textContent = energy.toFixed(2) + ' kWh';
+            document.getElementById('cost').textContent = formatCurrency(cost);
+            document.getElementById('duration').textContent = formatDuration(currentSession.startTime);
+
+            // Update session data
+            currentSession.batteryLevel = batteryLevel;
+            currentSession.energy = energy;
+            currentSession.cost = cost;
+
+            // Check if charging is complete
+            if (batteryLevel >= 100) {
+                showAlert('Sạc đầy! Phiên sạc sẽ tự động kết thúc.', 'success');
+                setTimeout(() => stopCharging(), 3000);
+            }
+        }
+
+        function startChargingUpdates() {
+            chargingInterval = setInterval(() => {
+                if (isCharging) {
+                    // Send periodic updates to server
+                    fetchWithAuth(`${API_BASE}/sessions/${currentSession.id}/update`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            batteryLevel: currentSession.batteryLevel,
+                            energy: currentSession.energy,
+                            cost: currentSession.cost,
+                            timestamp: new Date().toISOString()
+                        })
+                    }).catch(err => console.error('Error updating session:', err));
+                }
+            }, 30000); // Update every 30 seconds
+        }
+
+        async function stopCharging() {
+            if (!isCharging) return;
+
+            if (!confirm('Bạn có chắc chắn muốn dừng sạc?')) {
+                return;
+            }
+
+            try {
+                const res = await fetchWithAuth(`${API_BASE}/sessions/${currentSession.id}/stop`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: user.id,
+                        timestamp: new Date().toISOString(),
+                        finalBatteryLevel: currentSession.batteryLevel,
+                        totalEnergy: currentSession.energy,
+                        totalCost: currentSession.cost
+                    })
+                });
+
+                if (!res.ok) throw new Error('Không thể dừng phiên sạc');
+
+                isCharging = false;
+                clearInterval(wsConnection);
+                clearInterval(chargingInterval);
+                
+                showAlert('Phiên sạc đã kết thúc. Đang chuyển đến trang thanh toán...', 'success');
+                
+                // Create invoice and redirect to payment
+                try {
+                    const invoiceRes = await fetchWithAuth(`${API_BASE}/invoices`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            sessionId: currentSession.id,
+                            userId: user.id,
+                            energyConsumed: currentSession.energy,
+                            unitPrice: 3000, // 3000 VND per kWh
+                            serviceFee: 5000, // 5000 VND service fee
+                            totalAmount: currentSession.cost || (currentSession.energy * 3000 + 5000)
+                        })
+                    });
+                    
+                    if (invoiceRes.ok) {
+                        const invoice = await invoiceRes.json();
+                        console.log('Invoice created successfully:', invoice);
+                        setTimeout(() => {
+                            window.location.href = `payment.html?sessionId=${currentSession.id}`;
+                        }, 2000);
+                    } else {
+                        console.warn('Invoice creation failed with status:', invoiceRes.status);
+                        // If invoice creation fails, still go to payment
+                        setTimeout(() => {
+                            window.location.href = `payment.html?sessionId=${currentSession.id}`;
+                        }, 2000);
+                    }
+                } catch (err) {
+                    console.error('Error creating invoice:', err);
+                    // Fallback to payment page
+                    setTimeout(() => {
+                        window.location.href = `payment.html?sessionId=${currentSession.id}`;
+                    }, 2000);
+                }
+
+            } catch (err) {
+                showAlert(err.message, 'error');
+            }
+        }
+
+        function toggleNotifications() {
+            if ('Notification' in window) {
+                if (Notification.permission === 'granted') {
+                    showAlert('Thông báo đã được bật', 'success');
+                } else if (Notification.permission !== 'denied') {
+                    Notification.requestPermission().then(permission => {
+                        if (permission === 'granted') {
+                            showAlert('Đã bật thông báo', 'success');
+                            // Show notification when charging is complete
+                            if (currentSession && currentSession.batteryLevel >= 100) {
+                                new Notification('Sạc đầy!', {
+                                    body: 'Xe của bạn đã sạc đầy pin.',
+                                    icon: '/favicon.ico'
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+        }
+
+        // Utility functions
+        function formatTime(timestamp) {
+            if (!timestamp) return '--';
+            return new Date(timestamp).toLocaleString('vi-VN');
+        }
+
+        function formatDuration(startTime) {
+            if (!startTime) return '--';
+            const start = new Date(startTime);
+            const now = new Date();
+            const diff = Math.floor((now - start) / 1000); // seconds
+            const hours = Math.floor(diff / 3600);
+            const minutes = Math.floor((diff % 3600) / 60);
+            return `${hours}h ${minutes}m`;
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            }).format(amount);
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            initChargingSession();
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (wsConnection) clearInterval(wsConnection);
+            if (chargingInterval) clearInterval(chargingInterval);
+        });
+    </script>
+</body>
+</html>
