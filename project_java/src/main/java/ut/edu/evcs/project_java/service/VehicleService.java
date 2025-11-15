@@ -1,8 +1,10 @@
 package ut.edu.evcs.project_java.service;
 
 import org.springframework.stereotype.Service;
+import ut.edu.evcs.project_java.domain.notification.NotificationType;
 import ut.edu.evcs.project_java.domain.vehicle.Vehicle;
 import ut.edu.evcs.project_java.repo.VehicleRepository;
+import ut.edu.evcs.project_java.service.NotificationService;
 
 import java.util.List;
 import java.util.Optional;
@@ -10,9 +12,11 @@ import java.util.Optional;
 @Service
 public class VehicleService {
     private final VehicleRepository repo;
+    private final NotificationService notificationService;
 
-    public VehicleService(VehicleRepository repo) {
+    public VehicleService(VehicleRepository repo, NotificationService notificationService) {
         this.repo = repo;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -41,7 +45,16 @@ public class VehicleService {
         if (existing.isPresent()) {
             throw new IllegalArgumentException("Plate number already exists: " + vehicle.getPlateNo());
         }
-        return repo.save(vehicle);
+        Vehicle saved = repo.save(vehicle);
+        String meta = String.format("{\"vehicleId\":\"%s\",\"plateNo\":\"%s\"}", saved.getId(), saved.getPlateNo());
+        notificationService.createInAppNotification(
+            saved.getDriverId(),
+            "Đã thêm xe mới",
+            "Xe " + (saved.getBrand()!=null?saved.getBrand():"") + " " + (saved.getModel()!=null?saved.getModel():"") + " - biển số " + saved.getPlateNo(),
+            NotificationType.VEHICLE_CREATED,
+            meta
+        );
+        return saved;
     }
 
     /**
@@ -68,17 +81,33 @@ public class VehicleService {
             existing.setPlateNo(updates.getPlateNo());
         }
         
-        return repo.save(existing);
+        Vehicle updated = repo.save(existing);
+        String metaU = String.format("{\"vehicleId\":\"%s\",\"plateNo\":\"%s\"}", updated.getId(), updated.getPlateNo());
+        notificationService.createInAppNotification(
+            updated.getDriverId(),
+            "Cập nhật thông tin xe",
+            "Xe " + (updated.getBrand()!=null?updated.getBrand():"") + " " + (updated.getModel()!=null?updated.getModel():"") + " đã được cập nhật",
+            NotificationType.VEHICLE_UPDATED,
+            metaU
+        );
+        return updated;
     }
 
     /**
      * Xoá xe
      */
     public void delete(String id) {
-        if (!repo.existsById(id)) {
-            throw new IllegalArgumentException("Vehicle not found: " + id);
-        }
+        Vehicle existing = repo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Vehicle not found: " + id));
         repo.deleteById(id);
+        String metaD = String.format("{\"vehicleId\":\"%s\",\"plateNo\":\"%s\"}", existing.getId(), existing.getPlateNo());
+        notificationService.createInAppNotification(
+            existing.getDriverId(),
+            "Đã xoá xe",
+            "Xe biển số " + existing.getPlateNo() + " đã được xoá",
+            NotificationType.VEHICLE_DELETED,
+            metaD
+        );
     }
 
     /**
