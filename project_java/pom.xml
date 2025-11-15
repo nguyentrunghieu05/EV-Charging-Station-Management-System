@@ -23,7 +23,7 @@
     <springdoc.version>2.8.13</springdoc.version>
   </properties>
 
-  <!-- ✅ PHẢI CÓ THẺ BAO <dependencies> -->
+  <!--  PHẢI CÓ THẺ BAO <dependencies> -->
   <dependencies>
 
     <!-- Web -->
@@ -185,7 +185,7 @@
     </dependency>
 
   </dependencies>
-  <!-- ✅ KẾT THÚC BLOCK -->
+  <!--  KẾT THÚC BLOCK -->
 
   <build>
     <plugins>
