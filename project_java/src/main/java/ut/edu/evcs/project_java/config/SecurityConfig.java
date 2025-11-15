@@ -65,6 +65,7 @@ public class SecurityConfig {
                     //thêm lịch sử sạc và xe
                     "/vehicles.html",
                     "/sessions.html",
+                    "/notifications.html",
 
                     "/assets/**",
                     "/static/**",

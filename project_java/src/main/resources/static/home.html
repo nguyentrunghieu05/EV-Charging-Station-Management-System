@@ -148,6 +148,10 @@
             margin-bottom: 20px;
             color: #333;
         }
+        .section-header { display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; }
+        .badge-indicator { background:#ff5252; color:#fff; border-radius:12px; padding:2px 8px; font-size:12px; margin-left:10px; }
+        .dot { width:8px; height:8px; background:#ff5252; border-radius:50%; display:inline-block; margin-left:6px; vertical-align:middle; }
+        .link-btn { padding:8px 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:600; }
         
         .loading {
             text-align: center;
@@ -265,6 +269,9 @@
                 <button class="action-btn" onclick="openSessions()">
                     Lịch sử sạc
                 </button>
+                <button class="action-btn" onclick="openNotifications()">
+                    Thông báo
+                </button>
                 <button class="action-btn" onclick="openWallet()">
                     Nạp tiền
                 </button>
@@ -279,7 +286,13 @@
         
         <!-- Recent Notifications -->
         <div class="section">
-            <h2>Thông báo mới nhất</h2>
+            <div class="section-header">
+                <div>
+                    <h2 style="display:inline">Thông báo mới nhất</h2>
+                    <span id="unreadIndicator"></span>
+                </div>
+                <button class="link-btn" onclick="openNotifications()">Xem tất cả</button>
+            </div>
             <div id="notificationsList" class="loading">Đang tải...</div>
         </div>
     </div>
@@ -345,6 +358,7 @@
             const notifCount = await fetchWithAuth(`${API_BASE}/notifications/unread-count`);
             if (notifCount !== null && notifCount !== undefined) {
                 document.getElementById('notificationCount').textContent = notifCount;
+                setUnreadIndicator(notifCount);
             }
             
             // Load nearby stations (Ho Chi Minh City center)
@@ -372,9 +386,13 @@
                 stationsList.innerHTML = '<div class="empty-state">Không tìm thấy trạm sạc gần bạn</div>';
             }
             
+            await loadRecentNotifications();
+            setTimeout(loadRecentNotifications, 2000);
+        }
+
+        async function loadRecentNotifications() {
             const notifications = await fetchWithAuth(`${API_BASE}/notifications?page=0&size=5`);
             const notifList = document.getElementById('notificationsList');
-            
             if (notifications && Array.isArray(notifications.content) && notifications.content.length > 0) {
                 notifList.innerHTML = notifications.content.map(n => `
                     <div class="list-item">
@@ -389,6 +407,16 @@
                 `).join('');
             } else {
                 notifList.innerHTML = '<div class="empty-state">Không có thông báo mới</div>';
+            }
+        }
+
+        function setUnreadIndicator(count) {
+            const el = document.getElementById('unreadIndicator');
+            if (!el) return;
+            if (count > 0) {
+                el.innerHTML = `<span class="badge-indicator">${count} chưa đọc</span>`;
+            } else {
+                el.innerHTML = '';
             }
         }
         
@@ -415,6 +443,10 @@
         
         function openSessions() {
             window.location.href = 'sessions.html';
+        }
+        
+        function openNotifications() {
+            window.location.href = 'notifications.html';
         }
         
         function openWallet() {
