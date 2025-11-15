@@ -60,6 +60,8 @@ public class SecurityConfig {
                     "/auth.html",
                     "/home.html",
                     "/favicon.ico",
+                    "/stations.html",
+                    "/reservation.html",
 
                     "/assets/**",
                     "/static/**",
