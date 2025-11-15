@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVCS - Lịch sử sạc</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:#f5f7fa}
+        .navbar{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:15px 30px;display:flex;justify-content:space-between;align-items:center}
+        .container{max-width:1100px;margin:30px auto;padding:0 20px}
+        .card{background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.08);margin-bottom:20px}
+        .card h2{margin-bottom:15px;color:#333}
+        .filters{display:flex;gap:10px;margin-bottom:10px}
+        .btn{padding:10px 14px;border:none;border-radius:8px;font-weight:600;cursor:pointer}
+        .btn-primary{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff}
+        .btn-secondary{background:#f0f0f0;color:#666}
+        table{width:100%;border-collapse:collapse}
+        th,td{padding:12px;border-bottom:1px solid #eee;text-align:left;font-size:14px}
+        .badge{padding:4px 10px;border-radius:12px;font-size:12px;font-weight:600}
+        .badge.pending{background:#fff3e0;color:#f57c00}
+        .badge.confirmed{background:#e8f5e9;color:#2e7d32}
+        .badge.cancelled{background:#ffebee;color:#c62828}
+        .empty{padding:15px;color:#666}
+        .alert{padding:12px;border-radius:8px;margin-bottom:15px}
+        .alert.error{background:#ffebee;color:#c62828}
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>⚡ EVCS - Lịch sử sạc</h1>
+        <div>
+            <a href="home.html" style="color:#fff;text-decoration:none;margin-right:10px">Trang chủ</a>
+            <a href="stations.html" style="color:#fff;text-decoration:none">Tìm trạm</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="message"></div>
+        <div class="card">
+            <h2>Danh sách đặt chỗ / phiên sạc</h2>
+            <div class="filters">
+                <button class="btn btn-secondary" onclick="filterStatus('ALL')">Tất cả</button>
+                <button class="btn btn-secondary" onclick="filterStatus('PENDING')">Chờ</button>
+                <button class="btn btn-secondary" onclick="filterStatus('CONFIRMED')">Đã xác nhận</button>
+                <button class="btn btn-secondary" onclick="filterStatus('CANCELLED')">Đã huỷ</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mã</th>
+                        <th>Connector</th>
+                        <th>Bắt đầu</th>
+                        <th>Kết thúc</th>
+                        <th>Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody id="reservationsTable"><tr><td colspan="5">Đang tải...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let token = localStorage.getItem('accessToken');
+        let user = JSON.parse(localStorage.getItem('user') || '{}');
+        if (!token) { window.location.href = 'auth.html'; }
+        let currentFilter = 'ALL';
+
+        function showMsg(text, type='error') {
+            const m = document.getElementById('message');
+            m.className = 'alert ' + type;
+            m.textContent = text;
+            setTimeout(()=>{ m.className=''; m.textContent=''; }, 4000);
+        }
+
+        async function refreshAccessToken() {
+            try {
+                const res = await fetch(`${API_BASE}/auth/refresh`, { method: 'POST' });
+                if (!res.ok) return false;
+                const data = await res.json();
+                if (data && data.accessToken) {
+                    localStorage.setItem('accessToken', data.accessToken);
+                    token = data.accessToken;
+                    return true;
+                }
+                return false;
+            } catch { return false; }
+        }
+
+        async function fetchWithAuth(url, options={}) {
+            const opts = Object.assign({}, options);
+            opts.headers = Object.assign({}, opts.headers, { 'Authorization': `Bearer ${token}` });
+            let res = await fetch(url, opts);
+            if (res.status === 401 || res.status === 403) {
+                if (await refreshAccessToken()) {
+                    opts.headers['Authorization'] = `Bearer ${token}`;
+                    res = await fetch(url, opts);
+                }
+            }
+            return res;
+        }
+
+        function fmt(dt) {
+            if (!dt) return '';
+            const d = new Date(dt);
+            return d.toLocaleString('vi-VN', { hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit', year:'numeric' });
+        }
+
+        function badge(status) {
+            const s = (status||'').toUpperCase();
+            const cls = s==='CONFIRMED' ? 'confirmed' : s==='CANCELLED' ? 'cancelled' : 'pending';
+            return `<span class="badge ${cls}">${s}</span>`;
+        }
+
+        function filterStatus(st) { currentFilter = st; renderReservations(window.__reservations||[]); }
+
+        async function loadReservations() {
+            const tbody = document.getElementById('reservationsTable');
+            try {
+                const res = await fetchWithAuth(`${API_BASE}/reservations/driver/${user.id}`);
+                if (!res.ok) throw new Error('Load reservations failed');
+                const items = await res.json();
+                window.__reservations = items;
+                renderReservations(items);
+            } catch { tbody.innerHTML = '<tr><td colspan="5">Lỗi tải dữ liệu</td></tr>'; }
+        }
+
+        function renderReservations(items) {
+            const tbody = document.getElementById('reservationsTable');
+            let rows = items;
+            if (currentFilter!=='ALL') rows = rows.filter(x => (x.status||'').toUpperCase()===currentFilter);
+            if (!rows.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">Không có dữ liệu</td></tr>'; return; }
+            tbody.innerHTML = rows.map(r => `
+                <tr>
+                    <td>${r.id}</td>
+                    <td>${r.connectorId||''}</td>
+                    <td>${fmt(r.startWindow)}</td>
+                    <td>${fmt(r.endWindow)}</td>
+                    <td>${badge(r.status)}</td>
+                </tr>
+            `).join('');
+        }
+
+        loadReservations();
+    </script>
+</body>
+</html>
