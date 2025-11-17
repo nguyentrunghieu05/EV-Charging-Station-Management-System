@@ -390,7 +390,7 @@
         </div>
         
         <!-- Step 2: Choose Connector -->
-        <div class="card" id="connectorCard" class="hidden">
+        <div class="card hidden" id="connectorCard">
             <h2>🔌 Chọn cổng sạc</h2>
             <div id="connectorList" class="loading">
                 <div class="spinner"></div>
@@ -424,26 +424,11 @@
         <div class="card hidden" id="summaryCard">
             <h2>📋 Xác nhận đặt chỗ</h2>
             <div id="reservationSummary"></div>
-            
-            <div class="cost-summary">
-                <div class="cost-row">
-                    <span>Thời gian đặt:</span>
-                    <span id="durationText">--</span>
-                </div>
-                <div class="cost-row">
-                    <span>Giá ước tính:</span>
-                    <span id="estimatedCost">--</span>
-                </div>
-                <div class="cost-row total">
-                    <span>Tổng cộng:</span>
-                    <span id="totalCost">--</span>
-                </div>
-            </div>
         </div>
         
         <!-- Action Buttons -->
         <div class="btn-group">
-            <button class="btn btn-secondary" onclick="goBack()">Huỷ</button>
+            <button class="btn btn-secondary" onclick="goBackStep()">Quay lại</button>
             <button class="btn btn-primary" id="nextBtn" onclick="nextStep()">Tiếp tục</button>
         </div>
     </div>
@@ -600,28 +585,64 @@
         
         function setMinDateTime() {
             const now = new Date();
-            now.setMinutes(now.getMinutes() + 30);
-            const minDateTime = now.toISOString().slice(0, 16);
+            const tzShiftMs = now.getTimezoneOffset() * 60000;
+            const localISO = new Date(now.getTime() - tzShiftMs).toISOString().slice(0, 16);
+            document.getElementById('startTime').min = localISO;
+            document.getElementById('startTime').value = localISO;
+            const defaultEnd = new Date(now.getTime() + 2 * 60 * 60000);
+            const endISO = new Date(defaultEnd.getTime() - tzShiftMs).toISOString().slice(0, 16);
+            document.getElementById('endTime').min = localISO;
+            document.getElementById('endTime').value = endISO;
             
-            document.getElementById('startTime').min = minDateTime;
-            document.getElementById('startTime').value = minDateTime;
+            // Update end time min when start time changes
+            document.getElementById('startTime').addEventListener('change', function() {
+                const startVal = this.value;
+                if (startVal) {
+                    const startDate = new Date(startVal);
+                    const minEnd = new Date(startDate.getTime() + 30 * 60000); // At least 30 min after start
+                    document.getElementById('endTime').min = minEnd.toISOString().slice(0, 16);
+                }
+            });
             
-            const endTime = new Date(now);
-            endTime.setHours(endTime.getHours() + 2);
-            document.getElementById('endTime').value = endTime.toISOString().slice(0, 16);
+            // Update end time to auto-adjust if before start
+            document.getElementById('endTime').addEventListener('change', function() {
+                const startVal = document.getElementById('startTime').value;
+                const endVal = this.value;
+                
+                if (startVal && endVal) {
+                    const start = new Date(startVal);
+                    const end = new Date(endVal);
+                    
+                    if (end <= start) {
+                        // Auto-adjust end time to 2 hours after start
+                        const newEnd = new Date(start.getTime() + 2 * 60 * 60000);
+                        this.value = newEnd.toISOString().slice(0, 16);
+                        showAlert('Thời gian kết thúc đã được điều chỉnh tự động', 'info');
+                    }
+                }
+            });
         }
         
         function nextStep() {
             if (currentStep === 1) {
+                document.getElementById('stationCard').classList.remove('hidden');
                 document.getElementById('connectorCard').classList.remove('hidden');
+                document.getElementById('timeCard').classList.add('hidden');
+                document.getElementById('summaryCard').classList.add('hidden');
                 document.getElementById('nextBtn').disabled = true;
+                currentStep = 2;
                 updateProgress(2);
             } else if (currentStep === 2) {
                 if (!selectedConnector) {
                     showAlert('Vui lòng chọn connector', 'warning');
                     return;
                 }
+                document.getElementById('stationCard').classList.remove('hidden');
+                document.getElementById('connectorCard').classList.remove('hidden');
                 document.getElementById('timeCard').classList.remove('hidden');
+                document.getElementById('summaryCard').classList.add('hidden');
+                document.getElementById('nextBtn').disabled = false;
+                currentStep = 3;
                 updateProgress(3);
             } else if (currentStep === 3) {
                 const start = document.getElementById('startTime').value;
@@ -638,8 +659,12 @@
                 }
                 
                 displaySummary();
+                document.getElementById('stationCard').classList.remove('hidden');
+                document.getElementById('connectorCard').classList.remove('hidden');
+                document.getElementById('timeCard').classList.remove('hidden');
                 document.getElementById('summaryCard').classList.remove('hidden');
                 document.getElementById('nextBtn').textContent = 'Xác nhận đặt chỗ';
+                currentStep = 4;
                 updateProgress(4);
             } else if (currentStep === 4) {
                 confirmReservation();
@@ -662,29 +687,115 @@
         }
         
         function displaySummary() {
-            const start = new Date(document.getElementById('startTime').value);
-            const end = new Date(document.getElementById('endTime').value);
-            const duration = (end - start) / (1000 * 60 * 60);
+            const startVal = document.getElementById('startTime').value;
+            const endVal = document.getElementById('endTime').value;
+            const vehicleId = document.getElementById('vehicleSelect').value;
+            
+            if (!startVal || !endVal) {
+                showAlert('Vui lòng chọn thời gian', 'warning');
+                return;
+            }
+            
+            const start = new Date(startVal);
+            const end = new Date(endVal);
+            const durationMs = end - start;
+            const durationHours = durationMs / (1000 * 60 * 60);
+            const durationText = formatDuration(start, end);
+            
+            // Get vehicle info if selected
+            let vehicleInfo = 'Chưa chọn xe';
+            if (vehicleId) {
+                const vehicle = vehicles.find(v => v.id === vehicleId);
+                if (vehicle) {
+                    vehicleInfo = `${vehicle.brand} ${vehicle.model} (${vehicle.plateNo})`;
+                }
+            }
+            
+            // Calculate estimated cost
+            const powerKW = calculatePower(selectedConnector.maxCurrentA, selectedConnector.voltageV);
+            const estimatedKwh = durationHours * parseFloat(powerKW) * 0.7; // 0.7 factor for efficiency
+            const pricePerKwh = 3000;
+            const estimatedEnergyCost = estimatedKwh * pricePerKwh;
+            const estimatedServiceFee = durationHours * 15000; // 15000 VND per hour
+            const estimatedSubtotal = estimatedEnergyCost + estimatedServiceFee;
+            const estimatedVat = estimatedSubtotal * 0.1; // 10% VAT
+            const estimatedTotal = estimatedSubtotal + estimatedVat;
             
             document.getElementById('reservationSummary').innerHTML = `
                 <div class="station-info">
-                    <p><strong>Trạm:</strong> ${selectedStation.name}</p>
-                    <p><strong>Connector:</strong> ${selectedConnector.type} - ${calculatePower(selectedConnector.maxCurrentA, selectedConnector.voltageV)} kW</p>
-                    <p><strong>Thời gian:</strong> ${formatDateTime(start)} đến ${formatDateTime(end)}</p>
+                    <h3>Xác nhận đặt chỗ</h3>
+                    
+                    <div class="info-row">
+                        <span><strong>Trạm sạc:</strong></span>
+                        <span>${selectedStation.name}</span>
+                    </div>
+                    
+                    <div class="info-row">
+                        <span><strong>Connector:</strong></span>
+                        <span>${selectedConnector.type} (${powerKW} kW)</span>
+                    </div>
+                    
+                    <div class="info-row">
+                        <span><strong>Xe:</strong></span>
+                        <span>${vehicleInfo}</span>
+                    </div>
+                    
+                    <div class="info-row">
+                        <span><strong>Thời gian bắt đầu:</strong></span>
+                        <span>${formatDateTime(start)}</span>
+                    </div>
+                    
+                    <div class="info-row">
+                        <span><strong>Thời gian kết thúc:</strong></span>
+                        <span>${formatDateTime(end)}</span>
+                    </div>
+                    
+                    <div class="info-row">
+                        <span><strong>Tổng thời gian:</strong></span>
+                        <span>${durationText}</span>
+                    </div>
+                    
+                    <hr style="margin: 15px 0; border: none; border-top: 1px solid #eee;">
+                    
+                    <div class="info-row">
+                        <span><strong>Ước tính năng lượng:</strong></span>
+                        <span>${estimatedKwh.toFixed(2)} kWh</span>
+                    </div>
+                    
+                    <div class="info-row">
+                        <span><strong>Phí năng lượng (3000 đ/kWh):</strong></span>
+                        <span>${new Intl.NumberFormat('vi-VN').format(Math.round(estimatedEnergyCost))} đ</span>
+                    </div>
+                    
+                    <div class="info-row">
+                        <span><strong>Phí dịch vụ (15000 đ/h):</strong></span>
+                        <span>${new Intl.NumberFormat('vi-VN').format(Math.round(estimatedServiceFee))} đ</span>
+                    </div>
+                    
+                    <div class="info-row">
+                        <span><strong>Cộng phụ:</strong></span>
+                        <span>${new Intl.NumberFormat('vi-VN').format(Math.round(estimatedSubtotal))} đ</span>
+                    </div>
+                    
+                    <div class="info-row">
+                        <span><strong>Thuế VAT (10%):</strong></span>
+                        <span>${new Intl.NumberFormat('vi-VN').format(Math.round(estimatedVat))} đ</span>
+                    </div>
+                    
+                    <div class="info-row" style="border-top: 2px solid #667eea; padding-top: 10px; margin-top: 10px; font-weight: bold; font-size: 16px; color: #667eea;">
+                        <span>Tổng cộng ước tính:</span>
+                        <span>${new Intl.NumberFormat('vi-VN').format(Math.round(estimatedTotal))} đ</span>
+                    </div>
                 </div>
             `;
-            
-            document.getElementById('durationText').textContent = `${duration.toFixed(1)} giờ`;
-            
-            // Estimate cost (rough calculation)
-            const estimatedKwh = duration * parseFloat(calculatePower(selectedConnector.maxCurrentA, selectedConnector.voltageV)) * 0.7;
-            const pricePerKwh = 3000;
-            const estimatedCost = estimatedKwh * pricePerKwh;
-            
-            document.getElementById('estimatedCost').textContent = 
-                new Intl.NumberFormat('vi-VN').format(estimatedCost) + ' VND';
-            document.getElementById('totalCost').textContent = 
-                new Intl.NumberFormat('vi-VN').format(estimatedCost) + ' VND';
+        }
+        
+        function formatDuration(startDate, endDate) {
+            const diffMs = endDate - startDate;
+            const diffMins = Math.round(diffMs / (1000 * 60));
+            const hours = Math.floor(diffMins / 60);
+            const mins = diffMins % 60;
+            return `${hours}h ${mins}m`;
         }
         
         async function confirmReservation() {
@@ -692,11 +803,35 @@
             btn.disabled = true;
             btn.textContent = 'Đang xử lý...';
             
+            // Get datetime values from input (format: YYYY-MM-DDTHH:mm)
+            const startValue = document.getElementById('startTime').value;
+            const endValue = document.getElementById('endTime').value;
+            
+            // Validate times are in correct format
+            if (!startValue || !endValue) {
+                showAlert('Vui lòng chọn thời gian bắt đầu và kết thúc', 'warning');
+                btn.disabled = false;
+                btn.textContent = 'Xác nhận đặt chỗ';
+                return;
+            }
+            
+            // Convert YYYY-MM-DDTHH:mm to ISO format with seconds: YYYY-MM-DDTHH:mm:ss
+            const startWindow = startValue.includes('T') ? startValue + ':00' : startValue;
+            const endWindow = endValue.includes('T') ? endValue + ':00' : endValue;
+            
+            // Validate start < end
+            if (new Date(startWindow) >= new Date(endWindow)) {
+                showAlert('Thời gian kết thúc phải sau thời gian bắt đầu', 'warning');
+                btn.disabled = false;
+                btn.textContent = 'Xác nhận đặt chỗ';
+                return;
+            }
+            
             const payload = {
                 driverId: user.id,
                 connectorId: selectedConnector.id,
-                startWindow: document.getElementById('startTime').value + ':00',
-                endWindow: document.getElementById('endTime').value + ':00',
+                startWindow: startWindow,
+                endWindow: endWindow,
                 vehicleId: document.getElementById('vehicleSelect').value || null
             };
             
@@ -724,8 +859,12 @@
                 }
                 
                 if (!res.ok) {
-                    const error = await res.json();
-                    throw new Error(error.message || 'Đặt chỗ thất bại');
+                    let errorMsg = 'Đặt chỗ thất bại';
+                    try {
+                        const errorData = await res.json();
+                        errorMsg = errorData.message || errorData.error || errorMsg;
+                    } catch (e) {}
+                    throw new Error(errorMsg);
                 }
                 
                 const reservation = await res.json();
@@ -736,7 +875,7 @@
                 }, 2000);
                 
             } catch (err) {
-                console.error(err);
+                console.error('Reservation error:', err);
                 showAlert(err.message, 'error');
                 btn.disabled = false;
                 btn.textContent = 'Xác nhận đặt chỗ';
@@ -791,6 +930,40 @@
         function goBack() {
             if (confirm('Bạn có chắc muốn huỷ đặt chỗ?')) {
                 window.location.href = 'stations.html';
+            }
+        }
+        
+        function goBackStep() {
+            if (currentStep === 1) {
+                // From step 1, go back to stations
+                goBack();
+            } else if (currentStep === 2) {
+                // From step 2, go back to step 1
+                document.getElementById('stationCard').classList.remove('hidden');
+                document.getElementById('connectorCard').classList.add('hidden');
+                document.getElementById('timeCard').classList.add('hidden');
+                document.getElementById('summaryCard').classList.add('hidden');
+                currentStep = 1;
+                updateProgress(1);
+            } else if (currentStep === 3) {
+                // From step 3, go back to step 2
+                document.getElementById('stationCard').classList.add('hidden');
+                document.getElementById('connectorCard').classList.remove('hidden');
+                document.getElementById('timeCard').classList.add('hidden');
+                document.getElementById('summaryCard').classList.add('hidden');
+                document.getElementById('nextBtn').textContent = 'Tiếp tục';
+                document.getElementById('nextBtn').disabled = false;
+                currentStep = 2;
+                updateProgress(2);
+            } else if (currentStep === 4) {
+                // From step 4, go back to step 3
+                document.getElementById('stationCard').classList.add('hidden');
+                document.getElementById('connectorCard').classList.add('hidden');
+                document.getElementById('timeCard').classList.remove('hidden');
+                document.getElementById('summaryCard').classList.add('hidden');
+                document.getElementById('nextBtn').textContent = 'Tiếp tục';
+                currentStep = 3;
+                updateProgress(3);
             }
         }
         

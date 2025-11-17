@@ -116,8 +116,24 @@
                     <span id="unitPrice">-- đ/kWh</span>
                 </div>
                 <div class="cost-item">
-                    <span>Phí dịch vụ:</span>
-                    <span id="serviceFee">-- đ</span>
+                    <span>Phí năng lượng:</span>
+                    <span id="energyCostAmount">-- đ</span>
+                </div>
+                <div class="cost-item">
+                    <span>Phí thời gian sạc:</span>
+                    <span id="timeCostAmount">-- đ</span>
+                </div>
+                <div class="cost-item">
+                    <span>Phí chờ (Idle):</span>
+                    <span id="idleFeeAmount">-- đ</span>
+                </div>
+                <div class="cost-item" style="padding-top:10px;border-top:1px solid #ddd">
+                    <span>Tổng phí dịch vụ:</span>
+                    <span id="serviceFeeAmount">-- đ</span>
+                </div>
+                <div class="cost-item">
+                    <span>Cộng phụ:</span>
+                    <span id="subtotalAmount">-- đ</span>
                 </div>
                 <div class="cost-item">
                     <span>Thuế VAT (10%):</span>
@@ -348,16 +364,24 @@
 
             // Display cost breakdown
             const kwh = currentSession.kwhDelivered || 0;
-            const energyCost = currentSession.energyCost || 0;
-            const timeCost = currentSession.timeCost || 0;
-            const idleFee = currentSession.idleFee || 0;
-            const unitPrice = currentSession.unitPriceVnd ?? (kwh > 0 ? (Number(energyCost) / Number(kwh)) : 0);
+            const energyCost = invoiceData.energyCost || currentSession.energyCost || 0;
+            const timeCost = invoiceData.timeCost || currentSession.timeCost || 0;
+            const idleFee = invoiceData.idleFee || currentSession.idleFee || 0;
+            const serviceFee = invoiceData.serviceFee || (Number(timeCost) + Number(idleFee));
+            const subtotal = invoiceData.subtotal || (Number(energyCost) + Number(timeCost) + Number(idleFee));
+            const unitPrice = (currentSession.unitPriceVnd != null) ? Number(currentSession.unitPriceVnd) : (invoiceData.unitPrice ?? (kwh > 0 ? (Number(energyCost) / Number(kwh)) : 0));
+            const tax = invoiceData.taxAmount || 0;
+            const total = invoiceData.totalAmount || 0;
 
             document.getElementById('energyConsumed').textContent = `${Number(kwh).toFixed(2)} kWh`;
             document.getElementById('unitPrice').textContent = `${formatCurrency(unitPrice)}/kWh`;
-            document.getElementById('serviceFee').textContent = formatCurrency(Number(timeCost) + Number(idleFee));
-            document.getElementById('vatAmount').textContent = formatCurrency(invoiceData.taxAmount || 0);
-            document.getElementById('totalAmount').textContent = formatCurrency(invoiceData.totalAmount || 0);
+            document.getElementById('energyCostAmount').textContent = formatCurrency(Number(energyCost));
+            document.getElementById('timeCostAmount').textContent = formatCurrency(Number(timeCost));
+            document.getElementById('idleFeeAmount').textContent = formatCurrency(Number(idleFee));
+            document.getElementById('serviceFeeAmount').textContent = formatCurrency(Number(serviceFee));
+            document.getElementById('subtotalAmount').textContent = formatCurrency(Number(subtotal));
+            document.getElementById('vatAmount').textContent = formatCurrency(Number(tax));
+            document.getElementById('totalAmount').textContent = formatCurrency(Number(total));
 
             // Display invoice status
             document.getElementById('invoiceDate').textContent = formatDateTime(invoiceData.issuedAt);

@@ -8,6 +8,7 @@ import java.util.Map;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import ut.edu.evcs.project_java.domain.billing.Invoice;
@@ -45,8 +46,22 @@ public class InvoiceController {
     }
 
     @GetMapping("/{id}")
-    public Invoice getById(@PathVariable("id") String id) {
-        return invoiceRepo.findById(id).orElseThrow(() -> new RuntimeException("Invoice not found"));
+    public ResponseEntity<?> getById(@PathVariable("id") String id) {
+        try {
+            Invoice inv = invoiceRepo.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Invoice not found"));
+            
+            // SECURITY: Verify user can only view their own invoices (unless ADMIN)
+            String currentUserId = currentUserService.getCurrentUserId();
+            if (!inv.getDriverId().equals(currentUserId)) {
+                return ResponseEntity.status(403)
+                        .body(Map.of("error", "You don't have permission to view this invoice"));
+            }
+            
+            return ResponseEntity.ok(inv);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
+        }
     }
 
     @GetMapping("/session/{sessionId}")
@@ -76,12 +91,30 @@ public class InvoiceController {
     }
 
     @PostMapping("/{id}/pay")
-    public Map<String, String> markPaid(@PathVariable String id) {
-        Invoice inv = invoiceRepo.findById(id).orElseThrow(() -> new RuntimeException("Invoice not found"));
-        inv.setStatus("PAID");
-        inv.setPaidAt(LocalDateTime.now());
-        invoiceRepo.save(inv);
-        return Map.of("status", "SUCCESS", "message", "Invoice paid");
+    @PreAuthorize("hasAnyRole('EV_DRIVER', 'ADMIN')")
+    public ResponseEntity<?> markPaid(@PathVariable String id) {
+        try {
+            Invoice inv = invoiceRepo.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Invoice not found"));
+            
+            // SECURITY: Verify user can only mark their own invoices as paid
+            String currentUserId = currentUserService.getCurrentUserId();
+            if (!inv.getDriverId().equals(currentUserId)) {
+                return ResponseEntity.status(403)
+                        .body(Map.of("error", "You don't have permission to pay this invoice"));
+            }
+            
+            if ("PAID".equalsIgnoreCase(inv.getStatus())) {
+                return ResponseEntity.ok(Map.of("status", "SUCCESS", "message", "Invoice already paid"));
+            }
+            
+            inv.setStatus("PAID");
+            inv.setPaidAt(LocalDateTime.now());
+            invoiceRepo.save(inv);
+            return ResponseEntity.ok(Map.of("status", "SUCCESS", "message", "Invoice marked as paid"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
+        }
     }
 
     @PostMapping("/{id}/send-email")

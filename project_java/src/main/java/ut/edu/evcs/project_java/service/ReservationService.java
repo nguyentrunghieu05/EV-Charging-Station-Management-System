@@ -1,6 +1,7 @@
 package ut.edu.evcs.project_java.service;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,6 +44,25 @@ public class ReservationService {
         if (reservation.getStartWindow().isAfter(reservation.getEndWindow()) ||
                 reservation.getStartWindow().isEqual(reservation.getEndWindow())) {
             throw new IllegalArgumentException("startWindow must be before endWindow");
+        }
+        
+        // VALIDATION: Window cannot be more than 24 hours (prevent long reservations)
+        long hours = ChronoUnit.HOURS.between(
+            reservation.getStartWindow(), 
+            reservation.getEndWindow()
+        );
+        if (hours > 24) {
+            throw new IllegalArgumentException("Reservation time window cannot exceed 24 hours");
+        }
+        
+        // VALIDATION: Start time must be in the future
+        if (reservation.getStartWindow().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Reservation start time must be in the future");
+        }
+
+        // CONFLICT CHECK: Check for overlapping reservations on this connector
+        if (hasConflict(reservation.getConnectorId(), reservation.getStartWindow(), reservation.getEndWindow())) {
+            throw new IllegalStateException("Time slot overlaps with existing reservation on this connector");
         }
 
         if (reservation.getStatus() == null || reservation.getStatus().isBlank()) {

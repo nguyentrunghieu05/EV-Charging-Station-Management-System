@@ -30,6 +30,21 @@ public class Invoice {
     @Column(name = "total_amount", nullable = false)
     private BigDecimal totalAmount;
 
+    @Column(name = "energy_cost", nullable = false)
+    private BigDecimal energyCost = BigDecimal.ZERO;
+
+    @Column(name = "time_cost", nullable = false)
+    private BigDecimal timeCost = BigDecimal.ZERO;
+
+    @Column(name = "idle_fee", nullable = false)
+    private BigDecimal idleFee = BigDecimal.ZERO;
+
+    @Column(name = "service_fee", nullable = false)
+    private BigDecimal serviceFee = BigDecimal.ZERO;
+
+    @Column(name = "subtotal", nullable = false)
+    private BigDecimal subtotal = BigDecimal.ZERO;
+
     @Column(name = "tax_amount", nullable = false)
     private BigDecimal taxAmount = BigDecimal.ZERO;
 
@@ -54,6 +69,11 @@ public class Invoice {
                    String driverId,
                    String sessionId,
                    BigDecimal totalAmount,
+                   BigDecimal energyCost,
+                   BigDecimal timeCost,
+                   BigDecimal idleFee,
+                   BigDecimal serviceFee,
+                   BigDecimal subtotal,
                    BigDecimal taxAmount,
                    String currency,
                    String status,
@@ -64,6 +84,11 @@ public class Invoice {
         this.driverId = driverId;
         this.sessionId = sessionId;
         this.totalAmount = totalAmount;
+        this.energyCost = energyCost;
+        this.timeCost = timeCost;
+        this.idleFee = idleFee;
+        this.serviceFee = serviceFee;
+        this.subtotal = subtotal;
         this.taxAmount = taxAmount;
         this.currency = currency;
         this.status = status;
@@ -84,6 +109,21 @@ public class Invoice {
 
     public BigDecimal getTotalAmount() { return totalAmount; }
     public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
+
+    public BigDecimal getEnergyCost() { return energyCost; }
+    public void setEnergyCost(BigDecimal energyCost) { this.energyCost = energyCost; }
+
+    public BigDecimal getTimeCost() { return timeCost; }
+    public void setTimeCost(BigDecimal timeCost) { this.timeCost = timeCost; }
+
+    public BigDecimal getIdleFee() { return idleFee; }
+    public void setIdleFee(BigDecimal idleFee) { this.idleFee = idleFee; }
+
+    public BigDecimal getServiceFee() { return serviceFee; }
+    public void setServiceFee(BigDecimal serviceFee) { this.serviceFee = serviceFee; }
+
+    public BigDecimal getSubtotal() { return subtotal; }
+    public void setSubtotal(BigDecimal subtotal) { this.subtotal = subtotal; }
 
     public BigDecimal getTaxAmount() { return taxAmount; }
     public void setTaxAmount(BigDecimal taxAmount) { this.taxAmount = taxAmount; }
@@ -114,8 +154,13 @@ public class Invoice {
                 "id='" + id + '\'' +
                 ", driverId='" + driverId + '\'' +
                 ", sessionId='" + sessionId + '\'' +
-                ", totalAmount=" + totalAmount +
+                ", energyCost=" + energyCost +
+                ", timeCost=" + timeCost +
+                ", idleFee=" + idleFee +
+                ", serviceFee=" + serviceFee +
+                ", subtotal=" + subtotal +
                 ", taxAmount=" + taxAmount +
+                ", totalAmount=" + totalAmount +
                 ", currency='" + currency + '\'' +
                 ", status='" + status + '\'' +
                 ", issuedAt=" + issuedAt +

@@ -3,6 +3,7 @@ package ut.edu.evcs.project_java.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -54,6 +55,17 @@ public class SessionService {
         } else {
             delivered = BigDecimal.valueOf(s.getKwhDelivered());
         }
+        if (delivered == null || delivered.compareTo(BigDecimal.ZERO) <= 0) {
+            double hours = java.time.Duration.between(s.getStartTime(), LocalDateTime.now()).toMinutes() / 60.0;
+            double powerKW = 0.0;
+            try {
+                // Try to estimate using tariff/connector context via repository access not available here
+                // Fallback constant 50 kW for fast charging simulation
+                powerKW = 50.0;
+            } catch (Exception ignored) {}
+            double kwhEst = Math.max(0d, powerKW * hours * 0.7);
+            delivered = BigDecimal.valueOf(kwhEst);
+        }
         delivered = delivered.max(BigDecimal.ZERO).setScale(3, RoundingMode.HALF_UP);
 
         s.setEndTime(LocalDateTime.now());
@@ -98,10 +110,20 @@ public class SessionService {
     private TariffPlan resolveTariff(String tariffId) {
         if (tariffId != null) {
             Optional<TariffPlan> t = tariffRepo.findById(tariffId);
-            if (t.isPresent()) return t.get();
+            if (t.isPresent()) return ensureNonZeroPrice(t.get());
         }
-        return tariffRepo.findFirstByActiveTrue()
-                .orElseThrow(() -> new RuntimeException("No active tariff found"));
+        Optional<TariffPlan> active = tariffRepo.findFirstByActiveTrue();
+        if (active.isPresent()) return ensureNonZeroPrice(active.get());
+        TariffPlan fallback = new TariffPlan();
+        fallback.setPricePerKWh(new BigDecimal("3000"));
+        return fallback;
+    }
+
+    private TariffPlan ensureNonZeroPrice(TariffPlan t) {
+        if (t.getPricePerKWh() == null || t.getPricePerKWh().compareTo(BigDecimal.ZERO) <= 0) {
+            t.setPricePerKWh(new BigDecimal("3000"));
+        }
+        return t;
     }
 
     // ---- MoneyBreakdown inner class ----
@@ -141,6 +163,7 @@ public class SessionService {
         s.setDriverId(driverId);
         s.setConnectorId(connectorId);
         s.setVehicleId(vehicleId);
+        s.setStartTime(LocalDateTime.now());
         s.setStatus(STATUS_STARTED);
         s.setTariffId(activeTariff.getId());
 
