@@ -17,7 +17,7 @@ public class QRCodeService {
     // Tạo mã QR cho connector
     public String generateQR(String connectorId) {
         try {
-            String qrContent = "EVCS-CONNECTOR:" + connectorId;
+            String qrContent = "http://localhost:8080/scan.html?connectorId=" + connectorId;
             QRCodeWriter qrCodeWriter = new QRCodeWriter();
             BitMatrix bitMatrix = qrCodeWriter.encode(qrContent, BarcodeFormat.QR_CODE, 250, 250);
 
@@ -34,19 +34,30 @@ public class QRCodeService {
     }
 
     // Giải mã QR và bắt đầu session
-    public String scanAndStart(String qrCode, Long driverId) {
+    public String scanAndStart(String qrCode, String driverId) {
+        if (qrCode == null || qrCode.isBlank()) {
+            throw new IllegalArgumentException("Mã QR không được rỗng");
+        }
+        if (driverId == null || driverId.isBlank()) {
+            throw new IllegalArgumentException("Mã driver không được rỗng");
+        }
+        
         String decoded;
         try {
             decoded = new String(Base64.getDecoder().decode(qrCode));
         } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Mã QR không hợp lệ");
+            throw new RuntimeException("Mã QR không hợp lệ hoặc bị hỏng");
         }
 
         if (!decoded.startsWith("EVCS-CONNECTOR:")) {
-            throw new IllegalArgumentException("Mã QR không hợp lệ");
+            throw new IllegalArgumentException("Mã QR không phải của hệ thống EVCS");
         }
 
         String connectorId = decoded.substring("EVCS-CONNECTOR:".length());
+        if (connectorId.isBlank()) {
+            throw new IllegalArgumentException("Mã connector không hợp lệ");
+        }
+        
         // TODO: sau này thêm logic thật - kiểm tra connector, tạo session, lưu DB
         return "🔌 Bắt đầu session cho tài xế " + driverId + " tại connector " + connectorId;
     }

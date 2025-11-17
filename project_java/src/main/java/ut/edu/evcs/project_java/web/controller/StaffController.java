@@ -1,5 +1,6 @@
 package ut.edu.evcs.project_java.web.controller;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -23,6 +24,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import ut.edu.evcs.project_java.domain.incident.IncidentTicket;
 import ut.edu.evcs.project_java.domain.session.ChargingSession;
+import ut.edu.evcs.project_java.domain.session.Reservation;
+import ut.edu.evcs.project_java.domain.tariff.TariffPlan;
+import ut.edu.evcs.project_java.repo.ChargingSessionRepository;
+import ut.edu.evcs.project_java.repo.ReservationRepository;
+import ut.edu.evcs.project_java.repo.TariffPlanRepository;
+import ut.edu.evcs.project_java.service.BillingService;
 import ut.edu.evcs.project_java.service.IncidentTicketService;
 import ut.edu.evcs.project_java.service.SessionService;
 import ut.edu.evcs.project_java.web.dto.staff.AssignIncidentRequest;
@@ -42,11 +49,23 @@ public class StaffController {
 
     private final SessionService sessionService;
     private final IncidentTicketService incidentTicketService;
+    private final ChargingSessionRepository sessionRepo;
+    private final ReservationRepository reservationRepo;
+    private final TariffPlanRepository tariffRepo;
+    private final BillingService billingService;
 
     public StaffController(SessionService sessionService,
-                           IncidentTicketService incidentTicketService) {
+                           IncidentTicketService incidentTicketService,
+                           ChargingSessionRepository sessionRepo,
+                           ReservationRepository reservationRepo,
+                           TariffPlanRepository tariffRepo,
+                           BillingService billingService) {
         this.sessionService = sessionService;
         this.incidentTicketService = incidentTicketService;
+        this.sessionRepo = sessionRepo;
+        this.reservationRepo = reservationRepo;
+        this.tariffRepo = tariffRepo;
+        this.billingService = billingService;
     }
 
     // ===== SESSIONS =====
@@ -103,6 +122,47 @@ public class StaffController {
                 "count", sessions.size(),
                 "items", sessions
         );
+    }
+
+    @Operation(summary = "Reconcile sessions data and regenerate invoices")
+    @PostMapping("/sessions/reconcile")
+    public Map<String, Object> reconcile(@RequestBody(required=false) Map<String, Object> body) {
+        String sessionId = body != null ? (String) body.get("sessionId") : null;
+        List<ChargingSession> targets = sessionId != null
+                ? List.of(sessionRepo.findById(sessionId).orElseThrow(() -> new RuntimeException("Session not found")))
+                : sessionRepo.findAll();
+
+        int updated = 0;
+        int invoiced = 0;
+        for (ChargingSession s : targets) {
+            if (s.getReservationId() != null) {
+                reservationRepo.findById(s.getReservationId()).ifPresent(r -> {
+                    if (r.getStartWindow() != null) {
+                        s.setStartTime(r.getStartWindow());
+                    }
+                });
+            }
+
+            TariffPlan t = s.getTariffId() != null ? tariffRepo.findById(s.getTariffId()).orElse(null)
+                    : tariffRepo.findFirstByActiveTrue().orElse(null);
+            BigDecimal price = (t != null && t.getPricePerKWh() != null && t.getPricePerKWh().compareTo(BigDecimal.ZERO) > 0)
+                    ? t.getPricePerKWh() : new BigDecimal("3000");
+            if (s.getKwhDelivered() > 0) {
+                BigDecimal energyCost = BigDecimal.valueOf(s.getKwhDelivered()).multiply(price).setScale(2, java.math.RoundingMode.HALF_UP);
+                s.setEnergyCost(energyCost);
+                s.setTotalCost(energyCost);
+            }
+            sessionRepo.save(s);
+            updated++;
+
+            if (s.getEndTime() != null || "STOPPED".equalsIgnoreCase(s.getStatus()) || "COMPLETED".equalsIgnoreCase(s.getStatus())) {
+                try {
+                    billingService.createInvoice(s.getId());
+                    invoiced++;
+                } catch (RuntimeException ignored) {}
+            }
+        }
+        return Map.of("updated", updated, "invoiced", invoiced);
     }
 
     // ===== INCIDENT APIs =====

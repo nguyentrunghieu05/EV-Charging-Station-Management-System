@@ -31,6 +31,16 @@ public class BillingService {
     public Invoice createInvoice(String sessionId) {
         ChargingSession s = sessionRepo.findById(sessionId)
                 .orElseThrow(() -> new RuntimeException("Session not found"));
+        
+        // VALIDATION: Session must be stopped before creating invoice
+        if (!"STOPPED".equalsIgnoreCase(s.getStatus()) && !"COMPLETED".equalsIgnoreCase(s.getStatus())) {
+            throw new IllegalStateException("Session must be stopped before creating invoice. Current status: " + s.getStatus());
+        }
+        
+        // VALIDATION: Session must have endTime
+        if (s.getEndTime() == null) {
+            throw new IllegalStateException("Session has no endTime set");
+        }
 
         Invoice existing = invoiceRepo.findFirstBySessionIdOrderByIssuedAtDesc(sessionId).orElse(null);
         if (existing != null) {
@@ -38,6 +48,10 @@ public class BillingService {
         }
 
         BigDecimal energy = s.getEnergyCost() == null ? BigDecimal.ZERO : s.getEnergyCost();
+        if ((energy == null || energy.compareTo(BigDecimal.ZERO) == 0) && s.getKwhDelivered() > 0) {
+            BigDecimal unit = BigDecimal.valueOf(3000);
+            energy = BigDecimal.valueOf(s.getKwhDelivered()).multiply(unit).setScale(2, RoundingMode.HALF_UP);
+        }
         BigDecimal time = s.getTimeCost() == null ? BigDecimal.ZERO : s.getTimeCost();
         BigDecimal idle = s.getIdleFee() == null ? BigDecimal.ZERO : s.getIdleFee();
         BigDecimal subtotal = energy.add(time).add(idle).setScale(2, RoundingMode.HALF_UP);
@@ -47,8 +61,13 @@ public class BillingService {
         Invoice inv = new Invoice();
         inv.setDriverId(s.getDriverId());
         inv.setSessionId(s.getId());
-        inv.setTotalAmount(total);
+        inv.setEnergyCost(energy);
+        inv.setTimeCost(time);
+        inv.setIdleFee(idle);
+        inv.setServiceFee(time.add(idle)); // Service fee = time + idle
+        inv.setSubtotal(subtotal);
         inv.setTaxAmount(vat);
+        inv.setTotalAmount(total);
         inv.setCurrency("VND");
         inv.setStatus("ISSUED");
         inv.setInvoiceNo(generateInvoiceNo());

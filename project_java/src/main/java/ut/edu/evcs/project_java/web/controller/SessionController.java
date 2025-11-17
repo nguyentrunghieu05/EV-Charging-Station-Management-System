@@ -3,6 +3,7 @@ package ut.edu.evcs.project_java.web.controller;
 import java.math.BigDecimal;
 import java.util.Map;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ut.edu.evcs.project_java.domain.session.ChargingSession;
 import ut.edu.evcs.project_java.domain.session.Reservation;
@@ -19,6 +20,7 @@ import ut.edu.evcs.project_java.domain.station.ChargingPoint;
 
 @RestController
 @RequestMapping("/api/sessions")
+@PreAuthorize("hasAnyRole('EV_DRIVER', 'CS_STAFF', 'ADMIN')")
 public class SessionController {
 
     private final SessionService sessionService;
@@ -52,9 +54,24 @@ public class SessionController {
             Object fk = body.get("finalKwh");
             Object te = body.get("totalEnergy");
             if (fk != null) {
-                finalKwh = new BigDecimal(fk.toString());
+                try {
+                    finalKwh = new BigDecimal(fk.toString());
+                    // VALIDATION: finalKwh must be positive
+                    if (finalKwh.compareTo(BigDecimal.ZERO) < 0) {
+                        throw new IllegalArgumentException("finalKwh must be greater than or equal to 0");
+                    }
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Invalid finalKwh value: " + fk);
+                }
             } else if (te != null) {
-                finalKwh = new BigDecimal(te.toString());
+                try {
+                    finalKwh = new BigDecimal(te.toString());
+                    if (finalKwh.compareTo(BigDecimal.ZERO) < 0) {
+                        throw new IllegalArgumentException("totalEnergy must be greater than or equal to 0");
+                    }
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Invalid totalEnergy value: " + te);
+                }
             }
         }
         return sessionService.stopSession(id, finalKwh);
@@ -88,6 +105,11 @@ public class SessionController {
                 if (point != null && point.getStation() != null) {
                     dto.setStationName(point.getStation().getName());
                 }
+                dto.setMaxCurrentA(conn.getMaxCurrentA());
+                dto.setVoltageV(conn.getVoltageV());
+                if (conn.getMaxCurrentA() > 0 && conn.getVoltageV() > 0) {
+                    dto.setPowerKW(((conn.getMaxCurrentA() * conn.getVoltageV()) / 1000.0));
+                }
             } catch (Exception ignored) {}
         });
 
@@ -117,6 +139,13 @@ public class SessionController {
         return sessionService.updateMetrics(id, energy, cost);
     }
 
+    @PostMapping("/start-by-connector/{connectorId}")
+    public ChargingSession startByConnector(@PathVariable String connectorId, @RequestBody(required=false) Map<String,Object> body) {
+        String driverId = currentUserService.getCurrentUserId();
+        String vehicleId = body != null ? (String) body.getOrDefault("vehicleId", null) : null;
+        return sessionService.manualStartSession(driverId, connectorId, vehicleId, null, "qr-start");
+    }
+
     // ===== Start session from reservation (driver flow) =====
     @PostMapping("/start-from-reservation/{reservationId}")
     public ChargingSession startFromReservation(@PathVariable String reservationId,
@@ -129,6 +158,14 @@ public class SessionController {
         String notes = body != null ? (String) body.getOrDefault("notes", null) : null;
         ChargingSession s = sessionService.manualStartSession(driverId, connectorId, vehicleId, notes, "driver-self-start");
         s.setReservationId(reservationId);
+        // Đồng bộ startTime với thời gian đặt chỗ
+        if (r.getStartWindow() != null) {
+            s.setStartTime(r.getStartWindow());
+            if (r.getEndWindow() != null) {
+                s.setEndTime(r.getEndWindow());
+            }
+            s = sessionRepo.save(s);
+        }
         return s;
     }
 

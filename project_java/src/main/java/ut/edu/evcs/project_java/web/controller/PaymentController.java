@@ -48,6 +48,16 @@ public class PaymentController {
 
             Invoice inv = invoiceRepo.findById(invoiceId)
                     .orElseThrow(() -> new RuntimeException("Invoice not found"));
+            
+            // SECURITY FIX: Verify user owns this invoice
+            if (!userId.equals(inv.getDriverId())) {
+                return ResponseEntity.status(403).body(Map.of("message", "Bạn không có quyền thanh toán hóa đơn này"));
+            }
+            
+            // VALIDATION FIX: Amount must match invoice total
+            if (amount.compareTo(inv.getTotalAmount()) != 0) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Số tiền thanh toán không khớp với tổng hóa đơn"));
+            }
 
             if ("PAID".equalsIgnoreCase(inv.getStatus())) {
                 return ResponseEntity.ok(Map.of("status", "SUCCESS", "message", "Invoice already paid"));

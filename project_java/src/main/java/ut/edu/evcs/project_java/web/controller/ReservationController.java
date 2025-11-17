@@ -5,12 +5,15 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ut.edu.evcs.project_java.domain.session.Reservation;
 import ut.edu.evcs.project_java.service.ReservationService;
 import ut.edu.evcs.project_java.web.dto.reservation.CreateReservationRequest;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -30,30 +33,48 @@ public class ReservationController {
     @Operation(summary = "Tạo reservation mới (DTO)")
     @PostMapping
     @PreAuthorize("hasAnyRole('EV_DRIVER', 'ADMIN')")
-    public Reservation create(@Valid @RequestBody CreateReservationRequest request) {
-        // SỬA: Logic khởi tạo để khớp với Reservation.java mới
-        
-        // Giả định request.getDriverId() trả về String
-        String driverId = request.getDriverId();
-        if (driverId == null || driverId.isBlank()) {
-             throw new IllegalArgumentException("Invalid driverId format: " + request.getDriverId());
+    public ResponseEntity<?> create(@Valid @RequestBody CreateReservationRequest request) {
+        try {
+            // SỬA: Logic khởi tạo để khớp với Reservation.java mới
+            
+            // Giả định request.getDriverId() trả về String
+            String driverId = request.getDriverId();
+            if (driverId == null || driverId.isBlank()) {
+                 throw new IllegalArgumentException("Invalid driverId format: " + request.getDriverId());
+            }
+            
+            Reservation reservation = Reservation.builder()
+                    .driverId(driverId) // SỬA: .userId(userId) -> .driverId(driverId)
+                    .connectorId(request.getConnectorId())
+                    .startWindow(request.getStartWindow())
+                    .endWindow(request.getEndWindow())
+                    .status("PENDING")
+                    .build();
+            
+            Reservation created = service.create(reservation);
+            return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", "Validation Error",
+                "message", e.getMessage()
+            ));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "error", "Conflict",
+                "message", e.getMessage()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                "error", "Server Error",
+                "message", e.getMessage()
+            ));
         }
-        
-        Reservation reservation = Reservation.builder()
-                .driverId(driverId) // SỬA: .userId(userId) -> .driverId(driverId)
-                .connectorId(request.getConnectorId())
-                .startWindow(request.getStartWindow())
-                .endWindow(request.getEndWindow())
-                .status("PENDING")
-                .build();
-        
-        return service.create(reservation);
     }
 
     @Operation(summary = "Huỷ reservation")
     @PostMapping("/{id}/cancel")
     @PreAuthorize("hasAnyRole('EV_DRIVER', 'ADMIN')")
-    public Map<String, String> cancel(@PathVariable String id) { // SỬA: long -> String
+    public Map<String, String> cancel(@PathVariable @NonNull String id) { // SỬA: long -> String
         service.cancel(id);
         return Map.of(
             "status", "success",
@@ -65,7 +86,7 @@ public class ReservationController {
     @Operation(summary = "Xác nhận reservation")
     @PostMapping("/{id}/confirm")
     @PreAuthorize("hasAnyRole('CS_STAFF', 'ADMIN')")
-    public Map<String, String> confirm(@PathVariable String id) { // SỬA: Long -> String
+    public Map<String, String> confirm(@PathVariable @NonNull String id) { // SỬA: Long -> String
         service.confirm(id);
         return Map.of(
             "status", "success",
@@ -117,7 +138,7 @@ public class ReservationController {
     @Operation(summary = "Lấy chi tiết reservation")
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('EV_DRIVER', 'CS_STAFF', 'ADMIN')")
-    public Reservation getById(@PathVariable String id) { // SỬA: Long -> String
+    public Reservation getById(@PathVariable @NonNull String id) { // SỬA: Long -> String
         return service.getById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Reservation not found: " + id));
     }

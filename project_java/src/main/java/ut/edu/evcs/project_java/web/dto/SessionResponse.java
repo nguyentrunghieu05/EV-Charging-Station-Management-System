@@ -23,6 +23,9 @@ public class SessionResponse {
     private String stationName;
     private String connectorType;
     private BigDecimal unitPriceVnd;
+    private Double maxCurrentA;
+    private Double voltageV;
+    private Double powerKW;
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -71,4 +74,13 @@ public class SessionResponse {
 
     public BigDecimal getUnitPriceVnd() { return unitPriceVnd; }
     public void setUnitPriceVnd(BigDecimal unitPriceVnd) { this.unitPriceVnd = unitPriceVnd; }
+
+    public Double getMaxCurrentA() { return maxCurrentA; }
+    public void setMaxCurrentA(Double maxCurrentA) { this.maxCurrentA = maxCurrentA; }
+
+    public Double getVoltageV() { return voltageV; }
+    public void setVoltageV(Double voltageV) { this.voltageV = voltageV; }
+
+    public Double getPowerKW() { return powerKW; }
+    public void setPowerKW(Double powerKW) { this.powerKW = powerKW; }
 }

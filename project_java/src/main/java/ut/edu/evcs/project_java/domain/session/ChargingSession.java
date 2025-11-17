@@ -43,8 +43,7 @@ public class ChargingSession {
     @Column(nullable = false, length = 20)
     private String status; // STARTED, STOPPED, FAILED
 
-    // Dùng default CURRENT_TIMESTAMP ở DB -> không insert/update từ app (tuỳ bạn)
-    @Column(name = "start_time", insertable = false, updatable = false)
+    @Column(name = "start_time")
     private LocalDateTime startTime;
 
     @Column(name = "end_time")

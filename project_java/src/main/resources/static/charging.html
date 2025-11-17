@@ -76,7 +76,7 @@
                 <div class="status-item">
                     <h3>Thời gian còn lại</h3>
                     <div class="status-value" id="timeRemaining">--</div>
-                    <div class="status-unit">phút</div>
+                    <div class="status-unit">h:m</div>
                 </div>
             </div>
             
@@ -129,6 +129,7 @@
             <div class="action-buttons">
                 <button class="btn btn-danger" onclick="stopCharging()">Dừng sạc</button>
                 <button class="btn btn-primary" onclick="toggleNotifications()">Thông báo</button>
+                <button class="btn btn-secondary" onclick="goHome()">Trang chủ</button>
             </div>
         </div>
         
@@ -230,13 +231,37 @@
             if (!currentSession) return;
 
             document.getElementById('sessionId').textContent = currentSession.code || currentSession.id;
+            if (currentSession.stationName) {
+                const el = document.createElement('div');
+                el.className = 'info-row';
+                el.innerHTML = `<span>Trạm sạc:</span><span>${currentSession.stationName}</span>`;
+                document.querySelector('.session-info').appendChild(el);
+            }
+            if (currentSession.connectorType) {
+                const el2 = document.createElement('div');
+                el2.className = 'info-row';
+                el2.innerHTML = `<span>Connector:</span><span>${currentSession.connectorType}</span>`;
+                document.querySelector('.session-info').appendChild(el2);
+            }
             document.getElementById('startTime').textContent = formatTime(currentSession.startTime);
             document.getElementById('duration').textContent = formatDuration(currentSession.startTime);
+            if (currentSession.endTime) {
+                const el3 = document.createElement('div');
+                el3.className = 'info-row';
+                el3.innerHTML = `<span>Kết thúc:</span><span>${formatTime(currentSession.endTime)}</span>`;
+                document.querySelector('.session-info').appendChild(el3);
+                const rem = formatRemainingToEnd(currentSession.endTime);
+                document.getElementById('timeRemaining').textContent = rem;
+                document.getElementById('progressText').textContent = `${document.getElementById('batteryLevel').textContent || '--'}% - ${rem} còn lại`;
+            }
             
             // Update charging parameters
-            if (currentSession.power) document.getElementById('power').textContent = currentSession.power + ' kW';
-            if (currentSession.current) document.getElementById('current').textContent = currentSession.current + ' A';
-            if (currentSession.voltage) document.getElementById('voltage').textContent = currentSession.voltage + ' V';
+            const power = currentSession.power || currentSession.powerKW;
+            const currentA = currentSession.current || currentSession.maxCurrentA;
+            const voltageV = currentSession.voltage || currentSession.voltageV;
+            if (power) document.getElementById('power').textContent = Number(power).toFixed(1) + ' kW';
+            if (currentA) document.getElementById('current').textContent = Number(currentA).toFixed(0) + ' A';
+            if (voltageV) document.getElementById('voltage').textContent = Number(voltageV).toFixed(0) + ' V';
             if (currentSession.energy) document.getElementById('energy').textContent = currentSession.energy.toFixed(2) + ' kWh';
             if (currentSession.cost) document.getElementById('cost').textContent = formatCurrency(currentSession.cost);
         }
@@ -254,31 +279,42 @@
         }
 
         function updateChargingStatus() {
-            // Simulate charging data updates
-            const batteryLevel = Math.min(100, (currentSession.batteryLevel || 20) + Math.random() * 2);
-            const power = currentSession.power || 50;
-            const energy = (currentSession.energy || 0) + (power * (5 / 3600)); // 5 giây -> giờ
-            const cost = energy * 3000; // 3000 VND per kWh
-            const timeRemaining = Math.max(0, ((100 - batteryLevel) / (power / 60)) * 60); // minutes
+            const prevBattery = currentSession.batteryLevel || 20;
+            const batteryLevel = Math.min(100, prevBattery + Math.random());
+            const powerKW = currentSession.power || currentSession.powerKW || 50;
+            const energy = (currentSession.energy || 0) + (powerKW * (5 / 3600));
+            const unitPrice = currentSession.unitPriceVnd || 3000;
+            const cost = energy * unitPrice;
 
-            // Update UI
+            let remMinutes;
+            if (currentSession.endTime) {
+                const end = new Date(currentSession.endTime).getTime();
+                const now = Date.now();
+                remMinutes = Math.max(0, Math.round((end - now) / 60000));
+            } else {
+                const capacityKwh = currentSession.capacityKwh || 60;
+                const energyToFull = Math.max(0, capacityKwh * (1 - batteryLevel / 100));
+                const timeRemainingHours = powerKW > 0 ? (energyToFull / powerKW) : 0;
+                remMinutes = Math.max(0, Math.round(timeRemainingHours * 60));
+            }
+            const h = Math.floor(remMinutes / 60);
+            const m = remMinutes % 60;
+
             document.getElementById('batteryLevel').textContent = batteryLevel.toFixed(1);
-            document.getElementById('timeRemaining').textContent = Math.round(timeRemaining);
+            document.getElementById('timeRemaining').textContent = `${h}h ${m}m`;
             document.getElementById('progressFill').style.width = batteryLevel + '%';
-            document.getElementById('progressText').textContent = `${batteryLevel.toFixed(1)}% - ${timeRemaining > 0 ? Math.round(timeRemaining) + ' phút còn lại' : 'Sạc đầy'}`;
+            document.getElementById('progressText').textContent = `${batteryLevel.toFixed(1)}% - ${h}h ${m}m còn lại`;
             document.getElementById('energy').textContent = energy.toFixed(2) + ' kWh';
             document.getElementById('cost').textContent = formatCurrency(cost);
             document.getElementById('duration').textContent = formatDuration(currentSession.startTime);
 
-            // Update session data
             currentSession.batteryLevel = batteryLevel;
             currentSession.energy = energy;
             currentSession.cost = cost;
 
-            // Check if charging is complete
-            if (batteryLevel >= 100) {
-                showAlert('Sạc đầy! Phiên sạc sẽ tự động kết thúc.', 'success');
-                setTimeout(() => stopCharging(), 3000);
+            if (remMinutes <= 0 || batteryLevel >= 100) {
+                showAlert('Đã đến thời điểm kết thúc phiên sạc', 'success');
+                setTimeout(() => stopCharging(), 1500);
             }
         }
 
@@ -390,6 +426,13 @@
             }
         }
 
+        function goHome() {
+            if (isCharging && !confirm('Phiên sạc vẫn đang diễn ra. Bạn có chắc muốn rời khỏi trang này?')) {
+                return;
+            }
+            window.location.href = 'home.html';
+        }
+
         // Utility functions
         function formatTime(timestamp) {
             if (!timestamp) return '--';
@@ -404,6 +447,16 @@
             const hours = Math.floor(diff / 3600);
             const minutes = Math.floor((diff % 3600) / 60);
             return `${hours}h ${minutes}m`;
+        }
+
+        function formatRemainingToEnd(endTime) {
+            if (!endTime) return '--';
+            const end = new Date(endTime);
+            const now = new Date();
+            const diffMin = Math.max(0, Math.round((end.getTime() - now.getTime()) / 60000));
+            const h = Math.floor(diffMin / 60);
+            const m = diffMin % 60;
+            return `${h}h ${m}m`;
         }
 
         function formatCurrency(amount) {
