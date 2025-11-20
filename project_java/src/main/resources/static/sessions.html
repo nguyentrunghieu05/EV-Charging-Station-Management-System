@@ -21,6 +21,9 @@
         .badge.pending{background:#fff3e0;color:#f57c00}
         .badge.confirmed{background:#e8f5e9;color:#2e7d32}
         .badge.cancelled{background:#ffebee;color:#c62828}
+        .badge.started{background:#e3f2fd;color:#1565c0}
+        .badge.stopped{background:#fff3e0;color:#f57c00}
+        .badge.completed{background:#e8f5e9;color:#2e7d32}
         .empty{padding:15px;color:#666}
         .alert{padding:12px;border-radius:8px;margin-bottom:15px}
         .alert.error{background:#ffebee;color:#c62828}
@@ -127,8 +130,16 @@
 
         function badge(status) {
             const s = (status||'').toUpperCase();
-            const cls = s==='CONFIRMED' ? 'confirmed' : s==='CANCELLED' ? 'cancelled' : 'pending';
-            return `<span class="badge ${cls}">${s}</span>`;
+            const map = {
+                'PENDING': {cls:'pending', text:'CHỜ'},
+                'CONFIRMED': {cls:'confirmed', text:'ĐÃ XÁC NHẬN'},
+                'CANCELLED': {cls:'cancelled', text:'ĐÃ HUỶ'},
+                'STARTED': {cls:'started', text:'ĐANG SẠC'},
+                'STOPPED': {cls:'stopped', text:'ĐÃ DỪNG'},
+                'COMPLETED': {cls:'completed', text:'HOÀN THÀNH'}
+            };
+            const ent = map[s] || {cls:'pending', text:s};
+            return `<span class="badge ${ent.cls}">${ent.text}</span>`;
         }
 
         function filterStatus(st) { currentFilter = st; renderReservations(window.__reservations||[]); }
@@ -167,16 +178,27 @@
                 const res = await fetchWithAuth(`${API_BASE}/sessions/me`);
                 if (!res.ok) throw new Error('Load sessions failed');
                 const items = await res.json();
-                tbody.innerHTML = items.length ? items.map(s => `
+                const rows = await Promise.all(items.map(async (s) => {
+                    let invoiceStatus = null;
+                    try {
+                        const invRes = await fetchWithAuth(`${API_BASE}/invoices/session/${s.id}`);
+                        if (invRes.ok) {
+                            const inv = await invRes.json();
+                            invoiceStatus = (inv.status||'').toUpperCase();
+                        }
+                    } catch {}
+                    const payCell = (invoiceStatus==='PAID') ? '<span class="badge confirmed">ĐÃ THANH TOÁN</span>' : (s.status==='STOPPED' ? `<button class="btn btn-primary" onclick="pay('${s.id}')">Thanh toán</button>` : '');
+                    return `
                     <tr>
                         <td>${s.id}</td>
                         <td>${fmt(s.startTime)}</td>
                         <td>${fmt(s.endTime)}</td>
                         <td>${(s.kwhDelivered||0).toFixed(2)} kWh</td>
-                        <td><span class="badge ${((s.status||'').toLowerCase())}">${(s.status||'').toUpperCase()}</span></td>
-                        <td>${s.status==='STOPPED' ? `<button class="btn btn-primary" onclick="pay('${s.id}')">Thanh toán</button>` : ''}</td>
-                    </tr>
-                `).join('') : '<tr><td colspan="6" class="empty">Không có phiên sạc</td></tr>';
+                        <td>${badge(s.status)}</td>
+                        <td>${payCell}</td>
+                    </tr>`;
+                }));
+                tbody.innerHTML = rows.length ? rows.join('') : '<tr><td colspan="6" class="empty">Không có phiên sạc</td></tr>';
             } catch { tbody.innerHTML = '<tr><td colspan="6">Lỗi tải dữ liệu</td></tr>'; }
         }
 

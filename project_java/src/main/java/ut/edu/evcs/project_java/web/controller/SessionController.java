@@ -50,9 +50,11 @@ public class SessionController {
     @PostMapping("/{id}/stop")
     public ChargingSession stopSession(@PathVariable("id") String id, @RequestBody(required=false) Map<String,Object> body) {
         BigDecimal finalKwh = null;
+        BigDecimal totalCostOverride = null;
         if (body != null) {
             Object fk = body.get("finalKwh");
             Object te = body.get("totalEnergy");
+            Object tc = body.get("totalCost");
             if (fk != null) {
                 try {
                     finalKwh = new BigDecimal(fk.toString());
@@ -73,12 +75,21 @@ public class SessionController {
                     throw new IllegalArgumentException("Invalid totalEnergy value: " + te);
                 }
             }
+            if (tc != null) {
+                try {
+                    totalCostOverride = new BigDecimal(tc.toString());
+                    if (totalCostOverride.compareTo(BigDecimal.ZERO) < 0) {
+                        totalCostOverride = null;
+                    }
+                } catch (NumberFormatException ignored) {}
+            }
         }
-        return sessionService.stopSession(id, finalKwh);
+        return sessionService.stopSessionWithCost(id, finalKwh, totalCostOverride);
     }
 
     @GetMapping("/{id}")
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyRole('EV_DRIVER','ADMIN','STAFF')")
     public SessionResponse getById(@PathVariable String id) {
         ChargingSession s = sessionService.getById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found: " + id));

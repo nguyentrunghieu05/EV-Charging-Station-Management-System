@@ -22,7 +22,7 @@ public class WalletService {
     @Transactional
     public Wallet getOrCreateWallet(String userId) {
         Optional<Wallet> existing = repo.findAll().stream()
-                .filter(w -> w.getOwnerUserId().equals(userId))
+                .filter(w -> w.getOwnerUserId() != null && w.getOwnerUserId().equals(userId))
                 .findFirst();
         
         if (existing.isPresent()) {
@@ -134,7 +134,7 @@ public class WalletService {
      */
     public Optional<Wallet> getByUserId(String userId) {
         return repo.findAll().stream()
-                .filter(w -> w.getOwnerUserId().equals(userId))
+                .filter(w -> w.getOwnerUserId() != null && w.getOwnerUserId().equals(userId))
                 .findFirst();
     }
 }
