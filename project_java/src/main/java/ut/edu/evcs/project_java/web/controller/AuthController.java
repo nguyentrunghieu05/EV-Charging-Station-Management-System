@@ -127,7 +127,8 @@ public class AuthController {
         }
 
         String access = jwt.generateAccessToken(u.getUsername(), Map.of(
-                "uid", u.getId(), "email", u.getEmail(), "role", u.getType().name()
+                "uid", u.getId(), "email", u.getEmail(), "role", u.getType().name(),
+                "roles", java.util.List.of(u.getType().name())
         ));
 
         AuthResponse body = buildAuthResponse(u, access);
@@ -173,7 +174,8 @@ public class AuthController {
     // ===== helpers =====
     private ResponseEntity<AuthResponse> issueTokensAndRespond(User u, HttpServletRequest httpReq, HttpServletResponse httpRes) {
         String access = jwt.generateAccessToken(u.getUsername(), Map.of(
-                "uid", u.getId(), "email", u.getEmail(), "role", u.getType().name()
+                "uid", u.getId(), "email", u.getEmail(), "role", u.getType().name(),
+                "roles", java.util.List.of(u.getType().name())
         ));
         String refresh = jwt.generateRefreshToken(u.getUsername());
 

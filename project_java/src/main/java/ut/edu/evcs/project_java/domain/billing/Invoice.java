@@ -33,6 +33,12 @@ public class Invoice {
     @Column(name = "energy_cost", nullable = false)
     private BigDecimal energyCost = BigDecimal.ZERO;
 
+    @Column(name = "unit_price")
+    private BigDecimal unitPrice;
+
+    @Column(name = "kwh_delivered")
+    private Double kwhDelivered;
+
     @Column(name = "time_cost", nullable = false)
     private BigDecimal timeCost = BigDecimal.ZERO;
 
@@ -112,6 +118,12 @@ public class Invoice {
 
     public BigDecimal getEnergyCost() { return energyCost; }
     public void setEnergyCost(BigDecimal energyCost) { this.energyCost = energyCost; }
+
+    public BigDecimal getUnitPrice() { return unitPrice; }
+    public void setUnitPrice(BigDecimal unitPrice) { this.unitPrice = unitPrice; }
+
+    public Double getKwhDelivered() { return kwhDelivered; }
+    public void setKwhDelivered(Double kwhDelivered) { this.kwhDelivered = kwhDelivered; }
 
     public BigDecimal getTimeCost() { return timeCost; }
     public void setTimeCost(BigDecimal timeCost) { this.timeCost = timeCost; }

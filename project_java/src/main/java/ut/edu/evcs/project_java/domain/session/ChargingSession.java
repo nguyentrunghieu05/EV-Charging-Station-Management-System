@@ -64,6 +64,9 @@ public class ChargingSession {
     @Column(name = "total_cost", nullable = false)
     private BigDecimal totalCost = BigDecimal.ZERO;
 
+    @Column(name = "unit_price_vnd")
+    private BigDecimal unitPriceVnd;
+
     public ChargingSession() {}
 
     public ChargingSession(String id, String driverId, String vehicleId, String connectorId,
@@ -133,6 +136,9 @@ public class ChargingSession {
 
     public String getTariffId() { return tariffId; }
     public void setTariffId(String tariffId) { this.tariffId = tariffId; }
+
+    public BigDecimal getUnitPriceVnd() { return unitPriceVnd; }
+    public void setUnitPriceVnd(BigDecimal unitPriceVnd) { this.unitPriceVnd = unitPriceVnd; }
 
     @Override
     public String toString() {

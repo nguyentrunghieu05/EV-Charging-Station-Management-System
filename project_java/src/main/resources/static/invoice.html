@@ -147,6 +147,26 @@
                 </div>
             </div>
 
+            <div class="session-details" id="paymentInfoSection" style="display:none">
+                <h3>Thông tin thanh toán</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Phương thức:</span>
+                    <span class="detail-value" id="payMethod">VNPay</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Mã tham chiếu:</span>
+                    <span class="detail-value" id="txnRef">--</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Mã giao dịch:</span>
+                    <span class="detail-value" id="transNo">--</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Mã phản hồi:</span>
+                    <span class="detail-value" id="respCode">--</span>
+                </div>
+            </div>
+
             <div style="margin-top:40px;padding:20px;background:#f8f9ff;border-radius:8px">
                 <p style="font-weight:600;color:#667eea;margin-bottom:10px">Ghi chú:</p>
                 <p style="font-size:14px;color:#666;margin-bottom:5px">- Hóa đơn này được phát hành tự động bởi hệ thống EVCS</p>
@@ -223,6 +243,10 @@
         async function initInvoice() {
             const urlParams = new URLSearchParams(window.location.search);
             const invoiceId = urlParams.get('invoiceId');
+            const status = urlParams.get('status');
+            const code = urlParams.get('code');
+            const txnRef = urlParams.get('txnRef');
+            const transNo = urlParams.get('transNo');
             
             if (!invoiceId) {
                 showAlert('Không tìm thấy mã hóa đơn', 'error');
@@ -245,7 +269,26 @@
                     invoiceData.session = sessionData;
                 }
 
-                displayInvoice();
+                if (status === 'success') {
+                    invoiceData.status = 'PAID';
+                    displayInvoice();
+                    showAlert('Thanh toán thành công!', 'success');
+                    // Show payment info
+                    document.getElementById('paymentInfoSection').style.display = 'block';
+                    document.getElementById('txnRef').textContent = txnRef || '--';
+                    document.getElementById('transNo').textContent = transNo || '--';
+                    document.getElementById('respCode').textContent = code || '00';
+                } else if (status === 'cancel') {
+                    displayInvoice();
+                    showAlert('Bạn đã hủy thanh toán.', 'info');
+                } else if (status === 'fail') {
+                    displayInvoice();
+                    showAlert('Thanh toán thất bại' + (code ? ` (Mã lỗi: ${code})` : ''), 'error');
+                    document.getElementById('paymentInfoSection').style.display = 'block';
+                    document.getElementById('txnRef').textContent = txnRef || '--';
+                    document.getElementById('transNo').textContent = transNo || '--';
+                    document.getElementById('respCode').textContent = code || '--';
+                }
                 
             } catch (err) {
                 showAlert(err.message, 'error');
@@ -295,10 +338,10 @@
 
         function displayInvoiceItems() {
             const tbody = document.getElementById('invoiceItems');
-            
-            // Energy consumption item
             const kwh = invoiceData.session?.kwhDelivered || 0;
-            const energyAmount = invoiceData.session?.energyCost || 0;
+            const energyAmount = (invoiceData.session?.energyCost ?? invoiceData.energyCost ?? 0);
+            const timeCost = (invoiceData.session?.timeCost ?? invoiceData.timeCost ?? 0);
+            const idleFee = (invoiceData.session?.idleFee ?? invoiceData.idleFee ?? 0);
             const unitPrice = kwh > 0 ? (Number(energyAmount) / Number(kwh)) : 0;
             const items = [
                 {

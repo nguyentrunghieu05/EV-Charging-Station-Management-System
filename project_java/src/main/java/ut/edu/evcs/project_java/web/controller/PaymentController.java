@@ -38,9 +38,11 @@ public class PaymentController {
             String method = (String) body.get("paymentMethod");
             String userId = (String) body.get("userId");
             Object amtObj = body.get("amount");
+            
             if (invoiceId == null || method == null || userId == null || amtObj == null) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Thiếu tham số thanh toán"));
             }
+            
             BigDecimal amount = new BigDecimal(amtObj.toString());
             if (amount.compareTo(BigDecimal.ZERO) <= 0) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Số tiền phải > 0"));
@@ -50,7 +52,8 @@ public class PaymentController {
                     .orElseThrow(() -> new RuntimeException("Invoice not found"));
             
             // SECURITY FIX: Verify user owns this invoice
-            if (!userId.equals(inv.getDriverId())) {
+            // Lưu ý: Đảm bảo entity Invoice của bạn có field driverId và getter getDriverId()
+            if (inv.getDriverId() != null && !userId.equals(inv.getDriverId())) {
                 return ResponseEntity.status(403).body(Map.of("message", "Bạn không có quyền thanh toán hóa đơn này"));
             }
             
@@ -69,7 +72,7 @@ public class PaymentController {
                 }
                 walletService.deduct(userId, amount);
             }
-            // banking/card/qr: pretend success
+            // banking/card/qr: logic giả lập thành công (hoặc xử lý qua VNPay Controller riêng)
 
             inv.setStatus("PAID");
             inv.setPaidAt(LocalDateTime.now());
@@ -91,6 +94,9 @@ public class PaymentController {
             return ResponseEntity.status(400).body(Map.of("message", e.getMessage()));
         } catch (RuntimeException e) {
             return ResponseEntity.status(404).body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("message", "Lỗi Server: " + e.getMessage()));
         }
     }
 }

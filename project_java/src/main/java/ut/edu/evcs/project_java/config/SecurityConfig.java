@@ -86,7 +86,12 @@ public class SecurityConfig {
                     "/actuator/health",
 
                     // auth APIs
-                    "/api/auth/**"
+                    "/api/auth/**",
+
+                    // VNPay APIs - public endpoints
+                    "/api/vnpay/test",
+                    "/api/vnpay/return",
+                    "/api/vnpay/ipn"
                 ).permitAll()
                 .anyRequest().authenticated()
             )

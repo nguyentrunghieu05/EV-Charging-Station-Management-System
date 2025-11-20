@@ -31,12 +31,13 @@ public class BillingService {
     public Invoice createInvoice(String sessionId) {
         ChargingSession s = sessionRepo.findById(sessionId)
                 .orElseThrow(() -> new RuntimeException("Session not found"));
-        
+
         // VALIDATION: Session must be stopped before creating invoice
         if (!"STOPPED".equalsIgnoreCase(s.getStatus()) && !"COMPLETED".equalsIgnoreCase(s.getStatus())) {
-            throw new IllegalStateException("Session must be stopped before creating invoice. Current status: " + s.getStatus());
+            throw new IllegalStateException(
+                    "Session must be stopped before creating invoice. Current status: " + s.getStatus());
         }
-        
+
         // VALIDATION: Session must have endTime
         if (s.getEndTime() == null) {
             throw new IllegalStateException("Session has no endTime set");
@@ -47,16 +48,44 @@ public class BillingService {
             return existing;
         }
 
-        BigDecimal energy = s.getEnergyCost() == null ? BigDecimal.ZERO : s.getEnergyCost();
-        if ((energy == null || energy.compareTo(BigDecimal.ZERO) == 0) && s.getKwhDelivered() > 0) {
-            BigDecimal unit = BigDecimal.valueOf(3000);
-            energy = BigDecimal.valueOf(s.getKwhDelivered()).multiply(unit).setScale(2, RoundingMode.HALF_UP);
+        // When totalCost is already set in session (from frontend calculation),
+        // we should use the session's cost components directly to ensure consistency
+        BigDecimal sessionTotal = s.getTotalCost();
+        boolean useSessionCosts = (sessionTotal != null && sessionTotal.compareTo(BigDecimal.ZERO) > 0);
+
+        BigDecimal energy;
+        BigDecimal time;
+        BigDecimal idle;
+        BigDecimal subtotal;
+        BigDecimal vat;
+        BigDecimal total;
+
+        if (useSessionCosts) {
+            // Use costs from session (already calculated by frontend or backend)
+            energy = s.getEnergyCost() != null ? s.getEnergyCost() : BigDecimal.ZERO;
+            time = s.getTimeCost() != null ? s.getTimeCost() : BigDecimal.ZERO;
+            idle = s.getIdleFee() != null ? s.getIdleFee() : BigDecimal.ZERO;
+            total = sessionTotal.setScale(2, RoundingMode.HALF_UP);
+
+            // Calculate subtotal and VAT from total
+            // total = subtotal + vat, where vat = subtotal * 0.10
+            // total = subtotal * 1.10
+            // subtotal = total / 1.10
+            subtotal = total.divide(BigDecimal.valueOf(1.10), 2, RoundingMode.HALF_UP);
+            vat = total.subtract(subtotal).setScale(2, RoundingMode.HALF_UP);
+        } else {
+            // Fallback: Calculate from session data
+            energy = s.getEnergyCost() == null ? BigDecimal.ZERO : s.getEnergyCost();
+            if ((energy == null || energy.compareTo(BigDecimal.ZERO) == 0) && s.getKwhDelivered() > 0) {
+                BigDecimal unit = BigDecimal.valueOf(3000);
+                energy = BigDecimal.valueOf(s.getKwhDelivered()).multiply(unit).setScale(2, RoundingMode.HALF_UP);
+            }
+            time = s.getTimeCost() == null ? BigDecimal.ZERO : s.getTimeCost();
+            idle = s.getIdleFee() == null ? BigDecimal.ZERO : s.getIdleFee();
+            subtotal = energy.add(time).add(idle).setScale(2, RoundingMode.HALF_UP);
+            vat = subtotal.multiply(BigDecimal.valueOf(10).movePointLeft(2)).setScale(2, RoundingMode.HALF_UP);
+            total = subtotal.add(vat).setScale(2, RoundingMode.HALF_UP);
         }
-        BigDecimal time = s.getTimeCost() == null ? BigDecimal.ZERO : s.getTimeCost();
-        BigDecimal idle = s.getIdleFee() == null ? BigDecimal.ZERO : s.getIdleFee();
-        BigDecimal subtotal = energy.add(time).add(idle).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal vat = subtotal.multiply(BigDecimal.valueOf(10).movePointLeft(2)).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal total = subtotal.add(vat).setScale(2, RoundingMode.HALF_UP);
 
         Invoice inv = new Invoice();
         inv.setDriverId(s.getDriverId());
@@ -71,6 +100,11 @@ public class BillingService {
         inv.setCurrency("VND");
         inv.setStatus("ISSUED");
         inv.setInvoiceNo(generateInvoiceNo());
+
+        // Set new fields
+        inv.setKwhDelivered(s.getKwhDelivered());
+        inv.setUnitPrice(s.getUnitPriceVnd() != null ? s.getUnitPriceVnd() : new BigDecimal("3000"));
+
         inv = invoiceRepo.save(inv);
 
         try {
@@ -86,22 +120,28 @@ public class BillingService {
         List<ChargingSession> sessions = sessionRepo.findByDriverIdOrderByStartTimeDesc(driverId);
         List<Invoice> result = new ArrayList<>();
         for (ChargingSession s : sessions) {
-            boolean ended = s.getEndTime() != null || "STOPPED".equalsIgnoreCase(s.getStatus()) || "COMPLETED".equalsIgnoreCase(s.getStatus());
-            if (!ended) continue;
+            boolean ended = s.getEndTime() != null || "STOPPED".equalsIgnoreCase(s.getStatus())
+                    || "COMPLETED".equalsIgnoreCase(s.getStatus());
+            if (!ended)
+                continue;
             Invoice existing = invoiceRepo.findFirstBySessionIdOrderByIssuedAtDesc(s.getId()).orElse(null);
             if (existing != null) {
                 result.add(existing);
                 continue;
             }
-            Invoice created = createInvoice(s.getId());
-            result.add(created);
+            try {
+                Invoice created = createInvoice(s.getId());
+                result.add(created);
+            } catch (RuntimeException e) {
+                // Skip sessions that cannot be invoiced yet
+            }
         }
         return result;
     }
 
     private String generateInvoiceNo() {
         LocalDate now = LocalDate.now();
-        int random = (int)(Math.random() * 90000) + 10000;
+        int random = (int) (Math.random() * 90000) + 10000;
         return String.format("INV-%04d%02d-%05d", now.getYear(), now.getMonthValue(), random);
     }
 }
