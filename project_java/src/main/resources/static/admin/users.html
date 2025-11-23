@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ Quản lý Người dùng - EVCS Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f5f7fa;
+        }
+        
+        .navbar-admin {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-admin h1 {
+            font-size: 24px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        .section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .btn-logout {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-logout:hover {
+            background: #c82333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        thead {
+            background: #f8f9fa;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        th {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-admin {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .badge-staff {
+            background: #ffc107;
+            color: #000;
+        }
+        
+        .badge-driver {
+            background: #28a745;
+            color: white;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background: white;
+            margin: 50px auto;
+            padding: 30px;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 12px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar-admin">
+        <h1>⚡ EVCS - Quản lý Người dùng</h1>
+        <div class="user-info flex items-center gap-4">
+            <a href="dashboard.html" class="text-white hover:underline">← Dashboard</a>
+            <span id="userName">Admin</span>
+            <button class="btn-logout" id="logoutBtn">Đăng xuất</button>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="section">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Danh sách Người dùng</h2>
+                <div class="flex gap-3">
+                    <select id="filterUserType" class="px-4 py-2 border rounded-lg">
+                        <option value="">Tất cả loại</option>
+                        <option value="EV_DRIVER">Tài xế</option>
+                        <option value="CS_STAFF">Nhân viên</option>
+                        <option value="ADMIN">Quản trị</option>
+                    </select>
+                    <button class="btn btn-primary" id="btnAddUser">+ Thêm người dùng</button>
+                </div>
+            </div>
+            
+            <table id="usersTable">
+                <thead>
+                    <tr>
+                        <th>Tên đầy đủ</th>
+                        <th>Email</th>
+                        <th>Username</th>
+                        <th>Số điện thoại</th>
+                        <th>Loại</th>
+                        <th>Gói hiện tại</th>
+                        <th>Số dư ví</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                    <tr>
+                        <td colspan="8" class="text-center">Đang tải dữ liệu...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Thêm/Sửa Người dùng -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-xl font-bold mb-4" id="modalTitle">Thêm Người dùng mới</h3>
+            <form id="userForm">
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" id="userEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Username *</label>
+                    <input type="text" id="userUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>Tên đầy đủ *</label>
+                    <input type="text" id="userFullName" required>
+                </div>
+                <div class="form-group">
+                    <label>Số điện thoại</label>
+                    <input type="tel" id="userPhone">
+                </div>
+                <div class="form-group">
+                    <label>Mật khẩu *</label>
+                    <input type="password" id="userPassword">
+                    <small class="text-gray-500">Để trống nếu không muốn đổi mật khẩu (khi chỉnh sửa)</small>
+                </div>
+                <div class="form-group">
+                    <label>Loại người dùng *</label>
+                    <select id="userType" required>
+                        <option value="">-- Chọn loại --</option>
+                        <option value="EV_DRIVER">Tài xế EV</option>
+                        <option value="CS_STAFF">Nhân viên trạm sạc</option>
+                        <option value="ADMIN">Quản trị viên</option>
+                    </select>
+                </div>
+                <div class="flex gap-3 justify-end mt-6">
+                    <button type="button" class="btn bg-gray-300" id="btnCancelUser">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let currentUserId = null;
+        let isEditMode = false;
+
+        // Check admin access
+        function checkAdminAccess() {
+            const token = localStorage.getItem('accessToken');
+            const userJson = localStorage.getItem('user');
+            
+            if (!token || !userJson) {
+                alert('Vui lòng đăng nhập để truy cập trang quản trị.');
+                window.location.href = '../auth.html';
+                return null;
+            }
+
+            try {
+                const user = JSON.parse(userJson);
+                if (user.type !== 'ADMIN') {
+                    alert('Bạn không có quyền Admin để truy cập trang này.');
+                    window.location.href = '../home.html';
+                    return null;
+                }
+                document.getElementById('userName').textContent = user.fullName || user.username || 'Admin';
+                return user;
+            } catch (e) {
+                localStorage.clear();
+                window.location.href = '../auth.html';
+                return null;
+            }
+        }
+
+        const currentUser = checkAdminAccess();
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            localStorage.clear();
+            window.location.href = '../auth.html';
+        });
+
+        // Fetch all users
+        async function fetchUsers(userType = '') {
+            const token = localStorage.getItem('accessToken');
+            const url = userType 
+                ? `${API_BASE}/admin/management/users/by-type/${userType}`
+                : `${API_BASE}/admin/management/users`;
+
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Lỗi khi tải dữ liệu');
+                }
+
+                const users = await response.json();
+                renderUsersTable(users);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi tải danh sách người dùng');
+            }
+        }
+
+        // Render users table
+        function renderUsersTable(users) {
+            const tbody = document.getElementById('usersTableBody');
+            
+            if (users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center">Không có dữ liệu</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = users.map(user => `
+                <tr>
+                    <td>${user.fullName}</td>
+                    <td>${user.email}</td>
+                    <td>${user.username}</td>
+                    <td>${user.phone || 'N/A'}</td>
+                    <td><span class="badge badge-${user.userType.toLowerCase().replace('_', '')}">${getUserTypeLabel(user.userType)}</span></td>
+                    <td>${user.currentSubscriptionPlan || 'Không có'}</td>
+                    <td>${formatCurrency(user.walletBalance || 0)}</td>
+                    <td>
+                        <button class="text-blue-600 hover:underline mr-2" onclick="editUser('${user.id}')">Sửa</button>
+                        <button class="text-red-600 hover:underline" onclick="deleteUser('${user.id}', '${user.fullName}')">Xóa</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getUserTypeLabel(type) {
+            const labels = {
+                'EV_DRIVER': 'Tài xế',
+                'CS_STAFF': 'Nhân viên',
+                'ADMIN': 'Quản trị'
+            };
+            return labels[type] || type;
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+        }
+
+        // Filter by user type
+        document.getElementById('filterUserType').addEventListener('change', function() {
+            fetchUsers(this.value);
+        });
+
+        // Open modal for adding user
+        document.getElementById('btnAddUser').addEventListener('click', function() {
+            isEditMode = false;
+            currentUserId = null;
+            document.getElementById('modalTitle').textContent = 'Thêm Người dùng mới';
+            document.getElementById('userForm').reset();
+            document.getElementById('userPassword').required = true;
+            document.getElementById('userModal').style.display = 'block';
+        });
+
+        // Close modal
+        document.getElementById('btnCancelUser').addEventListener('click', function() {
+            document.getElementById('userModal').style.display = 'none';
+        });
+
+        // Edit user
+        async function editUser(userId) {
+            isEditMode = true;
+            currentUserId = userId;
+            const token = localStorage.getItem('accessToken');
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/management/users/${userId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) throw new Error('Lỗi khi tải dữ liệu người dùng');
+
+                const user = await response.json();
+                
+                document.getElementById('modalTitle').textContent = 'Chỉnh sửa Người dùng';
+                document.getElementById('userEmail').value = user.email;
+                document.getElementById('userEmail').disabled = true; // Email không được sửa
+                document.getElementById('userUsername').value = user.username;
+                document.getElementById('userUsername').disabled = true; // Username không được sửa
+                document.getElementById('userFullName').value = user.fullName;
+                document.getElementById('userPhone').value = user.phone || '';
+                document.getElementById('userType').value = user.userType;
+                document.getElementById('userPassword').value = '';
+                document.getElementById('userPassword').required = false;
+                
+                document.getElementById('userModal').style.display = 'block';
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi tải thông tin người dùng');
+            }
+        }
+
+        // Delete user
+        async function deleteUser(userId, userName) {
+            if (!confirm(`Bạn có chắc chắn muốn xóa người dùng "${userName}"?`)) return;
+
+            const token = localStorage.getItem('accessToken');
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/management/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) throw new Error('Lỗi khi xóa người dùng');
+
+                alert('Xóa người dùng thành công');
+                fetchUsers();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi xóa người dùng');
+            }
+        }
+
+        // Submit user form
+        document.getElementById('userForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const token = localStorage.getItem('accessToken');
+            const formData = {
+                fullName: document.getElementById('userFullName').value,
+                phone: document.getElementById('userPhone').value,
+                userType: document.getElementById('userType').value
+            };
+
+            const password = document.getElementById('userPassword').value;
+            if (password) {
+                formData.password = password;
+            }
+
+            let url, method;
+            
+            if (isEditMode) {
+                // Update user
+                url = `${API_BASE}/admin/management/users/${currentUserId}`;
+                method = 'PUT';
+            } else {
+                // Create user
+                url = `${API_BASE}/admin/management/users`;
+                method = 'POST';
+                formData.email = document.getElementById('userEmail').value;
+                formData.username = document.getElementById('userUsername').value;
+                if (!password) {
+                    alert('Mật khẩu là bắt buộc khi tạo người dùng mới');
+                    return;
+                }
+                formData.password = password;
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(error || 'Lỗi khi lưu dữ liệu');
+                }
+
+                alert(isEditMode ? 'Cập nhật người dùng thành công' : 'Tạo người dùng thành công');
+                document.getElementById('userModal').style.display = 'none';
+                document.getElementById('userEmail').disabled = false;
+                document.getElementById('userUsername').disabled = false;
+                fetchUsers();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi: ' + error.message);
+            }
+        });
+
+        // Initial load
+        if (currentUser) {
+            fetchUsers();
+        }
+    </script>
+</body>
+</html>

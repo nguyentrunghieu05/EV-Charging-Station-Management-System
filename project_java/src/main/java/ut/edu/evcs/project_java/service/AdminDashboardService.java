@@ -9,12 +9,12 @@ import ut.edu.evcs.project_java.web.dto.admin.RevenueSummaryDTO;
 import ut.edu.evcs.project_java.web.dto.admin.UsageStatsDTO;
 
 public interface AdminDashboardService {
-
+    
     RevenueSummaryDTO getRevenueSummary(LocalDate from, LocalDate to);
-
+    
     UsageStatsDTO getUsageStats(LocalDate from, LocalDate to);
-
+    
     List<PeakHourDTO> getPeakHours(LocalDate from, LocalDate to);
-
-    void toggleStationStatus(String stationId, StationStatus newStatus);
+    
+    void toggleStationStatus(String stationId, StationStatus status);
 }

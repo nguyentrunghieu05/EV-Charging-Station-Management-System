@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ Quản lý Trạm Sạc - EVCS Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f5f7fa;
+        }
+
+        .navbar-admin {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-admin h1 {
+            font-size: 24px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+
+        .station-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .station-card:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .station-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .status-badge {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .status-online {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-maintenance {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .charging-point {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-logout {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-logout:hover {
+            background: #c82333;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .stat-item h4 {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .stat-item p {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar-admin">
+        <h1>⚡ EVCS - Quản lý Trạm Sạc & Điểm Sạc</h1>
+        <div class="user-info flex items-center gap-4">
+            <a href="dashboard.html" class="text-white hover:underline">← Dashboard</a>
+            <span id="userName">Admin</span>
+            <button class="btn-logout" id="logoutBtn">Đăng xuất</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="section">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Danh sách Trạm sạc</h2>
+            <div id="stationsContainer">
+                <p class="text-center text-gray-500">Đang tải dữ liệu...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+
+        // Check admin access
+        function checkAdminAccess() {
+            const token = localStorage.getItem('accessToken');
+            const userJson = localStorage.getItem('user');
+
+            if (!token || !userJson) {
+                alert('Vui lòng đăng nhập để truy cập trang quản trị.');
+                window.location.href = '../auth.html';
+                return null;
+            }
+
+            try {
+                const user = JSON.parse(userJson);
+                if (user.type !== 'ADMIN') {
+                    alert('Bạn không có quyền Admin để truy cập trang này.');
+                    window.location.href = '../home.html';
+                    return null;
+                }
+                document.getElementById('userName').textContent = user.fullName || user.username || 'Admin';
+                return user;
+            } catch (e) {
+                localStorage.clear();
+                window.location.href = '../auth.html';
+                return null;
+            }
+        }
+
+        const currentUser = checkAdminAccess();
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', function () {
+            localStorage.clear();
+            window.location.href = '../auth.html';
+        });
+
+        // Fetch all stations with details
+        async function fetchStations() {
+            const token = localStorage.getItem('accessToken');
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/management/stations`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Lỗi khi tải dữ liệu trạm sạc');
+                }
+
+                const stations = await response.json();
+                renderStations(stations);
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('stationsContainer').innerHTML =
+                    '<p class="text-center text-red-500">Lỗi khi tải dữ liệu trạm sạc</p>';
+            }
+        }
+
+        // Render stations
+        function renderStations(stations) {
+            const container = document.getElementById('stationsContainer');
+
+            if (stations.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500">Không có trạm sạc nào</p>';
+                return;
+            }
+
+            container.innerHTML = stations.map(station => `
+                <div class="station-card">
+                    <div class="station-header">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">${station.name}</h3>
+                            <p class="text-gray-600 mt-1">${station.address}</p>
+                        </div>
+                        <div class="flex gap-2 items-center">
+                            <span class="status-badge status-${station.status.toLowerCase()}">${getStatusLabel(station.status)}</span>
+                            <button class="btn btn-primary btn-sm" onclick="toggleStationStatus('${station.id}', '${station.status}')">
+                                Chuyển trạng thái
+                            </button>
+                            <button class="btn btn-primary btn-sm" onclick="loadStationDetails('${station.id}')">
+                                Chi tiết
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <h4>Tổng điểm sạc</h4>
+                            <p>${station.totalChargingPoints}</p>
+                        </div>
+                        <div class="stat-item">
+                            <h4>Đang online</h4>
+                            <p class="text-green-600">${station.onlineChargingPoints}</p>
+                        </div>
+                        <div class="stat-item">
+                            <h4>Cổng khả dụng</h4>
+                            <p class="text-blue-600">${station.availablePorts}</p>
+                        </div>
+                        <div class="stat-item">
+                            <h4>Vị trí</h4>
+                            <p class="text-sm">${station.lat.toFixed(4)}, ${station.lng.toFixed(4)}</p>
+                        </div>
+                    </div>
+
+                    <div id="charging-points-${station.id}" class="mt-4"></div>
+                </div>
+            `).join('');
+        }
+
+        function getStatusLabel(status) {
+            const labels = {
+                'ONLINE': 'Hoạt động',
+                'OFFLINE': 'Không hoạt động',
+                'MAINTENANCE': 'Bảo trì'
+            };
+            return labels[status] || status;
+        }
+
+        // Toggle station status
+        async function toggleStationStatus(stationId, currentStatus) {
+            const statusOptions = ['ONLINE', 'OFFLINE', 'MAINTENANCE'];
+            const currentIndex = statusOptions.indexOf(currentStatus);
+            const nextStatus = statusOptions[(currentIndex + 1) % statusOptions.length];
+
+            const confirmed = confirm(`Chuyển trạng thái trạm từ "${getStatusLabel(currentStatus)}" sang "${getStatusLabel(nextStatus)}"?`);
+            if (!confirmed) return;
+
+            const token = localStorage.getItem('accessToken');
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/stations/${stationId}/toggle?status=${nextStatus}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) throw new Error('Lỗi khi chuyển trạng thái');
+
+                alert('Chuyển trạng thái trạm thành công');
+                fetchStations();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi chuyển trạng thái trạm');
+            }
+        }
+
+        // Load station details với charging points
+        async function loadStationDetails(stationId) {
+            const container = document.getElementById(`charging-points-${stationId}`);
+
+            // Toggle hiển thị
+            if (container.innerHTML !== '') {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = '<p class="text-center text-gray-500">Đang tải điểm sạc...</p>';
+
+            const token = localStorage.getItem('accessToken');
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/management/stations/${stationId}/charging-points`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) throw new Error('Lỗi khi tải điểm sạc');
+
+                const chargingPoints = await response.json();
+                renderChargingPoints(chargingPoints, stationId);
+            } catch (error) {
+                console.error('Error:', error);
+                container.innerHTML = '<p class="text-center text-red-500">Lỗi khi tải điểm sạc</p>';
+            }
+        }
+
+        // Render charging points
+        function renderChargingPoints(points, stationId) {
+            const container = document.getElementById(`charging-points-${stationId}`);
+
+            if (points.length === 0) {
+                container.innerHTML = '<p class="text-gray-500">Không có điểm sạc nào</p>';
+                return;
+            }
+
+            container.innerHTML = `
+                <h4 class="font-semibold text-gray-700 mb-3">Danh sách Điểm sạc:</h4>
+                ${points.map(point => `
+                    <div class="charging-point">
+                        <div>
+                            <div class="font-semibold">${point.code}</div>
+                            <div class="text-sm text-gray-600">
+                                Công suất: ${point.maxPowerKW} kW | 
+                                Connectors: ${point.occupiedConnectors}/${point.connectorCount} đang sử dụng
+                            </div>
+                        </div>
+                        <div class="flex gap-2 items-center">
+                            <span class="status-badge ${point.online ? 'status-online' : 'status-offline'}">
+                                ${point.online ? 'Online' : 'Offline'}
+                            </span>
+                            <button 
+                                class="btn btn-sm ${point.online ? 'btn-danger' : 'btn-success'}" 
+                                onclick="toggleChargingPoint('${point.id}', ${!point.online})">
+                                ${point.online ? 'Tắt' : 'Bật'}
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        // Toggle charging point
+        async function toggleChargingPoint(pointId, online) {
+            const token = localStorage.getItem('accessToken');
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/management/charging-points/${pointId}/toggle?online=${online}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) throw new Error('Lỗi khi điều khiển điểm sạc');
+
+                alert(`${online ? 'Bật' : 'Tắt'} điểm sạc thành công`);
+                fetchStations();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi điều khiển điểm sạc');
+            }
+        }
+
+        // Initial load
+        if (currentUser) {
+            fetchStations();
+        }
+    </script>
+</body>
+
+</html>
