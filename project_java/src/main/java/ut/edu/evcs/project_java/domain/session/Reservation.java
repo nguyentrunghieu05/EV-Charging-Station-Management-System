@@ -9,11 +9,11 @@ import java.util.Objects;
 public class Reservation {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID) // SỬA: Đổi từ IDENTITY (Long) sang UUID (String)
-    private String id; // SỬA: Đổi từ Long sang String
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
 
     @Column(name = "driver_id", nullable = false)
-    private String driverId; // SỬA: Đổi từ userId (Long) sang driverId (String)
+    private String driverId;
 
     @Column(name = "connector_id", nullable = false)
     private String connectorId;
@@ -27,12 +27,11 @@ public class Reservation {
     @Column(nullable = false)
     private String status;
 
-    // No-arg constructor
     public Reservation() {
     }
 
-    // All-args constructor (đã cập nhật)
-    public Reservation(String id, String driverId, String connectorId, LocalDateTime startWindow, LocalDateTime endWindow, String status) {
+    public Reservation(String id, String driverId, String connectorId, LocalDateTime startWindow,
+            LocalDateTime endWindow, String status) {
         this.id = id;
         this.driverId = driverId;
         this.connectorId = connectorId;
@@ -41,7 +40,7 @@ public class Reservation {
         this.status = status;
     }
 
-    // Getters and setters (đã cập nhật)
+    // Getters and setters
     public String getId() {
         return id;
     }
@@ -90,7 +89,6 @@ public class Reservation {
         this.status = status;
     }
 
-    // Builder
     public static Builder builder() {
         return new Builder();
     }
@@ -140,8 +138,10 @@ public class Reservation {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         Reservation that = (Reservation) o;
         return Objects.equals(id, that.id) &&
                 Objects.equals(driverId, that.driverId) &&

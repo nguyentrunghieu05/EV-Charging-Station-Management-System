@@ -21,7 +21,7 @@ public class CreateUserRequest {
     private String password;
 
     @NotBlank(message = "Loại người dùng không được để trống")
-    private String userType; // EV_DRIVER, CS_STAFF, ADMIN
+    private String userType;
 
     public CreateUserRequest() {
     }

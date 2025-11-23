@@ -48,30 +48,75 @@ public class RefreshToken {
     private String userAgent;
 
     // getters/setters
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-    
-    public String getUserId() { return userId; }
-    public void setUserId(String userId) { this.userId = userId; }
+    public String getId() {
+        return id;
+    }
 
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; } // không dùng để /refresh
+    public void setId(String id) {
+        this.id = id;
+    }
 
-    public String getToken() { return token; }
-    public void setToken(String token) { this.token = token; }
+    public String getUserId() {
+        return userId;
+    }
 
-    public OffsetDateTime getIssuedAt() { return issuedAt; }
-    public void setIssuedAt(OffsetDateTime issuedAt) { this.issuedAt = issuedAt; }
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
 
-    public OffsetDateTime getExpiresAt() { return expiresAt; }
-    public void setExpiresAt(OffsetDateTime expiresAt) { this.expiresAt = expiresAt; }
+    public User getUser() {
+        return user;
+    }
 
-    public boolean isRevoked() { return revoked; }
-    public void setRevoked(boolean revoked) { this.revoked = revoked; }
+    public void setUser(User user) {
+        this.user = user;
+    }
 
-    public String getIp() { return ip; }
-    public void setIp(String ip) { this.ip = ip; }
+    public String getToken() {
+        return token;
+    }
 
-    public String getUserAgent() { return userAgent; }
-    public void setUserAgent(String userAgent) { this.userAgent = userAgent; }
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public OffsetDateTime getIssuedAt() {
+        return issuedAt;
+    }
+
+    public void setIssuedAt(OffsetDateTime issuedAt) {
+        this.issuedAt = issuedAt;
+    }
+
+    public OffsetDateTime getExpiresAt() {
+        return expiresAt;
+    }
+
+    public void setExpiresAt(OffsetDateTime expiresAt) {
+        this.expiresAt = expiresAt;
+    }
+
+    public boolean isRevoked() {
+        return revoked;
+    }
+
+    public void setRevoked(boolean revoked) {
+        this.revoked = revoked;
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public void setIp(String ip) {
+        this.ip = ip;
+    }
+
+    public String getUserAgent() {
+        return userAgent;
+    }
+
+    public void setUserAgent(String userAgent) {
+        this.userAgent = userAgent;
+    }
 }

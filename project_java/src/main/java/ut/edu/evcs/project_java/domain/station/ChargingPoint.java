@@ -19,14 +19,14 @@ public class ChargingPoint {
     private String id;
 
     private String code;
-    
+
     @Column(name = "max_power_kw")
     private double maxPowerKW;
-    
+
     private boolean online;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "station_id") // Sẽ khớp với `String id` của Station
+    @JoinColumn(name = "station_id")
     private Station station;
 
     public ChargingPoint() {

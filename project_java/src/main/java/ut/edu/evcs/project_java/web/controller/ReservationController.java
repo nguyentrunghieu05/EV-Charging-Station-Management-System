@@ -35,64 +35,57 @@ public class ReservationController {
     @PreAuthorize("hasAnyRole('EV_DRIVER', 'ADMIN')")
     public ResponseEntity<?> create(@Valid @RequestBody CreateReservationRequest request) {
         try {
-            // SỬA: Logic khởi tạo để khớp với Reservation.java mới
-            
-            // Giả định request.getDriverId() trả về String
+
             String driverId = request.getDriverId();
             if (driverId == null || driverId.isBlank()) {
-                 throw new IllegalArgumentException("Invalid driverId format: " + request.getDriverId());
+                throw new IllegalArgumentException("Invalid driverId format: " + request.getDriverId());
             }
-            
+
             Reservation reservation = Reservation.builder()
-                    .driverId(driverId) // SỬA: .userId(userId) -> .driverId(driverId)
+                    .driverId(driverId)
                     .connectorId(request.getConnectorId())
                     .startWindow(request.getStartWindow())
                     .endWindow(request.getEndWindow())
                     .status("PENDING")
                     .build();
-            
+
             Reservation created = service.create(reservation);
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of(
-                "error", "Validation Error",
-                "message", e.getMessage()
-            ));
+                    "error", "Validation Error",
+                    "message", e.getMessage()));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                "error", "Conflict",
-                "message", e.getMessage()
-            ));
+                    "error", "Conflict",
+                    "message", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                "error", "Server Error",
-                "message", e.getMessage()
-            ));
+                    "error", "Server Error",
+                    "message", e.getMessage()));
         }
     }
 
     @Operation(summary = "Huỷ reservation")
     @PostMapping("/{id}/cancel")
     @PreAuthorize("hasAnyRole('EV_DRIVER', 'ADMIN')")
-    public Map<String, String> cancel(@PathVariable @NonNull String id) { // SỬA: long -> String
+    public Map<String, String> cancel(@PathVariable @NonNull String id) {
         service.cancel(id);
         return Map.of(
-            "status", "success",
-            "message", "Reservation cancelled",
-            "reservationId", id // SỬA: Không cần Long.toString()
-        );
+                "status", "success",
+                "message", "Reservation cancelled",
+                "reservationId", id);
     }
 
     @Operation(summary = "Xác nhận reservation")
     @PostMapping("/{id}/confirm")
     @PreAuthorize("hasAnyRole('CS_STAFF', 'ADMIN')")
-    public Map<String, String> confirm(@PathVariable @NonNull String id) { // SỬA: Long -> String
+    public Map<String, String> confirm(@PathVariable @NonNull String id) {
         service.confirm(id);
         return Map.of(
-            "status", "success",
-            "message", "Reservation confirmed",
-            "reservationId", id // SỬA: Không cần Long.toString()
-        );
+                "status", "success",
+                "message", "Reservation confirmed",
+                "reservationId", id);
     }
 
     @Operation(summary = "Kiểm tra conflict")
@@ -104,11 +97,10 @@ public class ReservationController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endWindow) {
         boolean hasConflict = service.hasConflict(connectorId, startWindow, endWindow);
         return Map.of(
-            "connectorId", connectorId,
-            "startWindow", startWindow,
-            "endWindow", endWindow,
-            "hasConflict", hasConflict
-        );
+                "connectorId", connectorId,
+                "startWindow", startWindow,
+                "endWindow", endWindow,
+                "hasConflict", hasConflict);
     }
 
     @Operation(summary = "Lấy reservation của driver")
@@ -138,7 +130,7 @@ public class ReservationController {
     @Operation(summary = "Lấy chi tiết reservation")
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('EV_DRIVER', 'CS_STAFF', 'ADMIN')")
-    public Reservation getById(@PathVariable @NonNull String id) { // SỬA: Long -> String
+    public Reservation getById(@PathVariable @NonNull String id) {
         return service.getById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Reservation not found: " + id));
     }
@@ -156,21 +148,18 @@ public class ReservationController {
     public Map<String, Object> getAvailableSlots(
             @PathVariable String connectorId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date) {
-        
-        // Lấy tất cả reservation của connector trong ngày
+
         LocalDateTime startOfDay = date.withHour(0).withMinute(0).withSecond(0);
         LocalDateTime endOfDay = date.withHour(23).withMinute(59).withSecond(59);
-        
+
         List<Reservation> bookings = service.getByConnectorAndTimeRange(
-            connectorId, startOfDay, endOfDay
-        );
-        
+                connectorId, startOfDay, endOfDay);
+
         return Map.of(
-            "connectorId", connectorId,
-            "date", date.toLocalDate(),
-            "bookings", bookings,
-            "totalSlots", 24, // giờ
-            "bookedSlots", bookings.size()
-        );
+                "connectorId", connectorId,
+                "date", date.toLocalDate(),
+                "bookings", bookings,
+                "totalSlots", 24,
+                "bookedSlots", bookings.size());
     }
 }

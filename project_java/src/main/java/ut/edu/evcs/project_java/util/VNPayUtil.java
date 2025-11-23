@@ -14,14 +14,8 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import jakarta.servlet.http.HttpServletRequest;
 
-/**
- * VNPay utility functions
- */
 public class VNPayUtil {
 
-    /**
-     * MD5 hash function
-     */
     public static String md5(String message) {
         String digest = null;
         try {
@@ -38,9 +32,6 @@ public class VNPayUtil {
         return digest;
     }
 
-    /**
-     * SHA256 hash function
-     */
     public static String sha256(String message) {
         String digest = null;
         try {
@@ -57,9 +48,6 @@ public class VNPayUtil {
         return digest;
     }
 
-    /**
-     * HMAC SHA512 hash function
-     */
     public static String hmacSHA512(final String key, final String data) {
         try {
             if (key == null || data == null) {
@@ -81,9 +69,6 @@ public class VNPayUtil {
         }
     }
 
-    /**
-     * Hash all fields in the map
-     */
     public static String hashAllFields(Map<String, String> fields, String secretKey) {
         List<String> fieldNames = new ArrayList<>(fields.keySet());
         Collections.sort(fieldNames);
@@ -104,9 +89,6 @@ public class VNPayUtil {
         return hmacSHA512(secretKey, sb.toString());
     }
 
-    /**
-     * Get client IP address
-     */
     public static String getIpAddress(HttpServletRequest request) {
         String ipAddress;
         try {
@@ -120,9 +102,6 @@ public class VNPayUtil {
         return ipAddress;
     }
 
-    /**
-     * Generate random number string
-     */
     public static String getRandomNumber(int len) {
         Random rnd = new Random();
         String chars = "0123456789";
@@ -133,9 +112,6 @@ public class VNPayUtil {
         return sb.toString();
     }
 
-    /**
-     * Build query string from map
-     */
     public static String buildQueryString(Map<String, String> params) {
         List<String> keys = new ArrayList<>(params.keySet());
         Collections.sort(keys);
@@ -152,9 +128,6 @@ public class VNPayUtil {
         return query.toString();
     }
 
-    /**
-     * URL encode string
-     */
     public static String urlEncode(String str) {
         try {
             return java.net.URLEncoder.encode(str, "UTF-8");

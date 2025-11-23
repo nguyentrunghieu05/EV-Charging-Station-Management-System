@@ -53,20 +53,13 @@ public class SessionService {
         }
 
         BigDecimal delivered;
-        // Priority 1: Use meter readings if available
         if (s.getMeterStartKwh() != null && s.getMeterEndKwh() != null) {
             delivered = s.getMeterEndKwh().subtract(s.getMeterStartKwh());
-        }
-        // Priority 2: Use finalKwh from frontend (charging page calculation)
-        else if (finalKwh != null && finalKwh.compareTo(BigDecimal.ZERO) > 0) {
+        } else if (finalKwh != null && finalKwh.compareTo(BigDecimal.ZERO) > 0) {
             delivered = finalKwh;
-        }
-        // Priority 3: Use existing kwhDelivered from session
-        else if (s.getKwhDelivered() > 0) {
+        } else if (s.getKwhDelivered() > 0) {
             delivered = BigDecimal.valueOf(s.getKwhDelivered());
-        }
-        // Priority 4: Estimate based on time and power (fallback only)
-        else {
+        } else {
             double hours = java.time.Duration.between(s.getStartTime(), LocalDateTime.now()).toMinutes() / 60.0;
             double powerKW = 50.0; // Fallback constant for fast charging simulation
             double kwhEst = Math.max(0d, powerKW * hours * 0.7);
@@ -102,39 +95,27 @@ public class SessionService {
     public ChargingSession stopSessionWithCost(String sessionId, BigDecimal finalKwh, BigDecimal totalCostOverride) {
         ChargingSession s = stopSession(sessionId, finalKwh);
 
-        // If frontend provides totalCost override, use it directly
-        // The backend has already calculated individual components (energy, time, idle)
-        // We trust the frontend's total calculation which includes energy + time + VAT
         if (totalCostOverride != null && totalCostOverride.compareTo(BigDecimal.ZERO) >= 0) {
             BigDecimal currentTotal = s.getTotalCost() != null ? s.getTotalCost() : BigDecimal.ZERO;
 
-            // Only adjust if there's a significant difference or if backend calculated 0
-            // but frontend has value
             if (currentTotal.compareTo(totalCostOverride) != 0) {
                 s.setTotalCost(totalCostOverride.setScale(2, RoundingMode.HALF_UP));
-
-                // Reconcile components to match the override
-                // If backend calculated 0 (or very different), we need to adjust components
-                // so the invoice doesn't show Total > 0 but Components = 0
 
                 BigDecimal currentSubtotal = (s.getEnergyCost() != null ? s.getEnergyCost() : BigDecimal.ZERO)
                         .add(s.getTimeCost() != null ? s.getTimeCost() : BigDecimal.ZERO)
                         .add(s.getIdleFee() != null ? s.getIdleFee() : BigDecimal.ZERO);
 
-                // Calculate expected subtotal from override total (Total = Subtotal * 1.1)
                 BigDecimal expectedSubtotal = totalCostOverride.divide(BigDecimal.valueOf(1.1), 2,
                         RoundingMode.HALF_UP);
 
                 if (currentSubtotal.compareTo(BigDecimal.ZERO) == 0) {
-                    // If backend calculated 0, attribute all to Energy (if kwh > 0) or Time
                     if (s.getKwhDelivered() > 0) {
                         s.setEnergyCost(expectedSubtotal);
                     } else {
                         s.setTimeCost(expectedSubtotal);
                     }
                 } else {
-                    // If backend has some values, scale them proportionally
-                    // Factor = ExpectedSubtotal / CurrentSubtotal
+
                     BigDecimal factor = expectedSubtotal.divide(currentSubtotal, 4, RoundingMode.HALF_UP);
 
                     if (s.getEnergyCost() != null)
@@ -288,10 +269,9 @@ public class SessionService {
         ChargingSession s = sessionRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Session not found: " + id));
 
-        // Don't update metrics if session is already stopped
         String st = s.getStatus() == null ? "" : s.getStatus().toUpperCase();
         if (STATUS_STOPPED.equals(st)) {
-            return s; // Return without updating to preserve final values
+            return s;
         }
 
         if (energyKwh != null) {
@@ -312,7 +292,6 @@ public class SessionService {
     }
 
     public List<ChargingSession> getActiveSessionsByStation(String stationId) {
-        // Hiện entity chưa có stationId → tạm trả về all active
         return getActiveSessions();
     }
 

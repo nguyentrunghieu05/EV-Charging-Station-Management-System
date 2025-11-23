@@ -1,66 +1,333 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EVCS - Hóa đơn điện tử</title>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:#f5f7fa}
-        .navbar{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:15px 30px;display:flex;justify-content:space-between;align-items:center}
-        .container{max-width:800px;margin:30px auto;padding:0 20px}
-        .invoice-container{background:#fff;padding:40px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.1);margin-bottom:20px}
-        .invoice-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:40px;padding-bottom:30px;border-bottom:2px solid #667eea}
-        .company-info h1{color:#667eea;font-size:28px;margin-bottom:10px}
-        .company-info p{color:#666;font-size:14px;margin:2px 0}
-        .invoice-meta{text-align:right}
-        .invoice-meta h2{color:#333;font-size:24px;margin-bottom:10px}
-        .invoice-meta p{color:#666;font-size:14px;margin:4px 0}
-        .invoice-status{display:inline-block;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:600;text-transform:uppercase;margin-top:10px}
-        .invoice-status.paid{background:#e8f5e9;color:#2e7d32}
-        .invoice-status.pending{background:#fff3e0;color:#f57c00}
-        .invoice-status.failed{background:#ffebee;color:#c62828}
-        .client-section{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-bottom:40px}
-        .client-info h3{color:#667eea;margin-bottom:15px;font-size:16px}
-        .client-info p{margin:5px 0;color:#333;font-size:14px}
-        .session-details{background:#f8f9ff;padding:20px;border-radius:8px;margin-bottom:30px}
-        .session-details h3{color:#667eea;margin-bottom:15px;font-size:16px}
-        .detail-row{display:flex;justify-content:space-between;margin:8px 0;padding:5px 0;border-bottom:1px solid #eee}
-        .detail-row:last-child{border-bottom:none}
-        .detail-label{font-weight:600;color:#555}
-        .detail-value{font-weight:500;color:#333}
-        .invoice-table{width:100%;border-collapse:collapse;margin-bottom:30px}
-        .invoice-table th{background:#667eea;color:#fff;padding:12px;text-align:left;font-weight:600}
-        .invoice-table td{padding:12px;border-bottom:1px solid #eee}
-        .invoice-table tr:last-child td{border-bottom:none}
-        .totals-section{margin-top:30px;padding-top:20px;border-top:2px solid #667eea}
-        .total-row{display:flex;justify-content:space-between;margin:8px 0;padding:5px 0}
-        .total-row.grand-total{font-weight:bold;font-size:18px;color:#667eea;border-top:2px solid #667eea;padding-top:15px;margin-top:15px}
-        .action-buttons{display:flex;gap:15px;justify-content:center;margin-top:40px}
-        .btn{padding:12px 24px;border:none;border-radius:8px;font-weight:600;cursor:pointer;transition:all 0.3s;font-size:16px}
-        .btn-primary{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff}
-        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(102,126,234,0.4)}
-        .btn-secondary{background:#f0f0f0;color:#666}
-        .btn-secondary:hover{background:#e0e0e0}
-        .btn-success{background:linear-gradient(135deg,#4caf50 0%,#388e3c 100%);color:#fff}
-        .btn-success:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(76,175,80,0.4)}
-        .alert{padding:15px;border-radius:8px;margin:15px 0;text-align:center}
-        .alert.success{background:#e8f5e9;color:#2e7d32}
-        .alert.error{background:#ffebee;color:#c62828}
-        .alert.info{background:#e3f2fd;color:#1565c0}
-        .loading{text-align:center;padding:40px}
-        .spinner{width:50px;height:50px;border:5px solid #f3f3f3;border-top:5px solid #667eea;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px}
-        @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-        .hidden{display:none}
-        .print-header{display:none}
-        @media print{
-            body{background:#fff}
-            .navbar,.action-buttons{display:none}
-            .invoice-container{box-shadow:none;border:1px solid #ddd}
-            .print-header{display:block;text-align:center;margin-bottom:30px;color:#667eea}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma,
+                Geneva, Verdana, sans-serif;
+            background: #f5f7fa
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 0 20px
+        }
+
+        .invoice-container {
+            background: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .1);
+            margin-bottom: 20px
+        }
+
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 2px solid #667eea
+        }
+
+        .company-info h1 {
+            color: #667eea;
+            font-size: 28px;
+            margin-bottom: 10px
+        }
+
+        .company-info p {
+            color: #666;
+            font-size: 14px;
+            margin: 2px 0
+        }
+
+        .invoice-meta {
+            text-align: right
+        }
+
+        .invoice-meta h2 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 10px
+        }
+
+        .invoice-meta p {
+            color: #666;
+            font-size: 14px;
+            margin: 4px 0
+        }
+
+        .invoice-status {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-top: 10px
+        }
+
+        .invoice-status.paid {
+            background: #e8f5e9;
+            color: #2e7d32
+        }
+
+        .invoice-status.pending {
+            background: #fff3e0;
+            color: #f57c00
+        }
+
+        .invoice-status.failed {
+            background: #ffebee;
+            color: #c62828
+        }
+
+        .client-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px
+        }
+
+        .client-info h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 16px
+        }
+
+        .client-info p {
+            margin: 5px 0;
+            color: #333;
+            font-size: 14px
+        }
+
+        .session-details {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px
+        }
+
+        .session-details h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 16px
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee
+        }
+
+        .detail-row:last-child {
+            border-bottom: none
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #555
+        }
+
+        .detail-value {
+            font-weight: 500;
+            color: #333
+        }
+
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px
+        }
+
+        .invoice-table th {
+            background: #667eea;
+            color: #fff;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600
+        }
+
+        .invoice-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee
+        }
+
+        .invoice-table tr:last-child td {
+            border-bottom: none
+        }
+
+        .totals-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #667eea
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 5px 0
+        }
+
+        .total-row.grand-total {
+            font-weight: bold;
+            font-size: 18px;
+            color: #667eea;
+            border-top: 2px solid #667eea;
+            padding-top: 15px;
+            margin-top: 15px
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 40px
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4)
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #666
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+            color: #fff
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4)
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center
+        }
+
+        .alert.success {
+            background: #e8f5e9;
+            color: #2e7d32
+        }
+
+        .alert.error {
+            background: #ffebee;
+            color: #c62828
+        }
+
+        .alert.info {
+            background: #e3f2fd;
+            color: #1565c0
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg)
+            }
+
+            100% {
+                transform: rotate(360deg)
+            }
+        }
+
+        .hidden {
+            display: none
+        }
+
+        .print-header {
+            display: none
+        }
+
+        @media print {
+            body {
+                background: #fff
+            }
+
+            .navbar,
+            .action-buttons {
+                display: none
+            }
+
+            .invoice-container {
+                box-shadow: none;
+                border: 1px solid #ddd
+            }
+
+            .print-header {
+                display: block;
+                text-align: center;
+                margin-bottom: 30px;
+                color: #667eea
+            }
         }
     </style>
 </head>
+
 <body>
     <nav class="navbar">
         <h1>⚡ EVCS - Hóa đơn điện tử</h1>
@@ -72,7 +339,7 @@
 
     <div class="container">
         <div id="message"></div>
-        
+
         <div class="invoice-container" id="invoiceContainer">
             <div class="print-header">
                 <h1>⚡ EVCS - HÓA ĐƠN ĐIỆN TỬ</h1>
@@ -124,7 +391,9 @@
                     </tr>
                 </thead>
                 <tbody id="invoiceItems">
-                    <tr><td colspan="6" style="text-align:center">Đang tải dữ liệu...</td></tr>
+                    <tr>
+                        <td colspan="6" style="text-align:center">Đang tải dữ liệu...</td>
+                    </tr>
                 </tbody>
             </table>
 
@@ -169,8 +438,10 @@
 
             <div style="margin-top:40px;padding:20px;background:#f8f9ff;border-radius:8px">
                 <p style="font-weight:600;color:#667eea;margin-bottom:10px">Ghi chú:</p>
-                <p style="font-size:14px;color:#666;margin-bottom:5px">- Hóa đơn này được phát hành tự động bởi hệ thống EVCS</p>
-                <p style="font-size:14px;color:#666;margin-bottom:5px">- Vui lòng liên hệ hotline (028) 1234-5678 nếu cần hỗ trợ</p>
+                <p style="font-size:14px;color:#666;margin-bottom:5px">- Hóa đơn này được phát hành tự động bởi hệ thống
+                    EVCS</p>
+                <p style="font-size:14px;color:#666;margin-bottom:5px">- Vui lòng liên hệ hotline (028) 1234-5678 nếu
+                    cần hỗ trợ</p>
                 <p style="font-size:14px;color:#666">- Cảm ơn quý khách đã sử dụng dịch vụ của chúng tôi!</p>
             </div>
         </div>
@@ -247,7 +518,7 @@
             const code = urlParams.get('code');
             const txnRef = urlParams.get('txnRef');
             const transNo = urlParams.get('transNo');
-            
+
             if (!invoiceId) {
                 showAlert('Không tìm thấy mã hóa đơn', 'error');
                 setTimeout(() => window.location.href = 'home.html', 3000);
@@ -256,7 +527,7 @@
 
             try {
                 showAlert('Đang tải hóa đơn...', 'info');
-                
+
                 // Load invoice details
                 const invoiceRes = await fetchWithAuth(`${API_BASE}/invoices/${invoiceId}`);
                 if (!invoiceRes.ok) throw new Error('Không thể tải hóa đơn');
@@ -289,7 +560,7 @@
                     document.getElementById('transNo').textContent = transNo || '--';
                     document.getElementById('respCode').textContent = code || '--';
                 }
-                
+
             } catch (err) {
                 showAlert(err.message, 'error');
                 setTimeout(() => window.location.href = 'home.html', 3000);
@@ -302,7 +573,7 @@
             // Display invoice header
             document.getElementById('invoiceNumber').textContent = invoiceData.invoiceNo || invoiceData.id;
             document.getElementById('invoiceDate').textContent = formatDate(invoiceData.issuedAt);
-            
+
             const statusElement = document.getElementById('invoiceStatus');
             const statusNorm = (invoiceData.status || '').toUpperCase() === 'ISSUED' ? 'PENDING' : (invoiceData.status || 'PENDING');
             statusElement.textContent = getStatusText(statusNorm);
@@ -377,7 +648,7 @@
         async function downloadPDF() {
             try {
                 showAlert('Đang tạo file PDF...', 'info');
-                
+
                 const pdfRes = await fetchWithAuth(`${API_BASE}/invoices/${invoiceData.id}/pdf`);
                 if (!pdfRes.ok) throw new Error('Không thể tạo file PDF');
 
@@ -404,7 +675,7 @@
         async function sendEmail() {
             try {
                 showAlert('Đang gửi email...', 'info');
-                
+
                 const emailRes = await fetchWithAuth(`${API_BASE}/invoices/${invoiceData.id}/send-email`, {
                     method: 'POST'
                 });
@@ -460,4 +731,5 @@
         });
     </script>
 </body>
+
 </html>

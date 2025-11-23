@@ -2,7 +2,7 @@ package ut.edu.evcs.project_java.domain.station;
 
 import java.util.Objects;
 
-import org.locationtech.jts.geom.Point; 
+import org.locationtech.jts.geom.Point;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -36,7 +36,6 @@ public class Station {
     @Column(name = "status", length = 20)
     private StationStatus status;
 
-
     @Column(name = "available_ports", nullable = false, columnDefinition = "INT DEFAULT 0")
     private int availablePorts;
 
@@ -46,7 +45,8 @@ public class Station {
     public Station() {
     }
 
-    public Station(String id, String name, String address, double lat, double lng, StationStatus status, int availablePorts, Point location) {
+    public Station(String id, String name, String address, double lat, double lng, StationStatus status,
+            int availablePorts, Point location) {
         this.id = id;
         this.name = name;
         this.address = address;
@@ -57,7 +57,7 @@ public class Station {
         this.location = location;
     }
 
-    // --- Getters và Setters (đã cập nhật id thành String) ---
+    // --- Getters và Setters
 
     public String getId() {
         return id;
@@ -123,12 +123,10 @@ public class Station {
         this.location = location;
     }
 
-    // --- toString, equals, và hashCode (đã cập nhật) ---
-
     @Override
     public String toString() {
         return "Station{" +
-                "id='" + id + '\'' + // Sửa
+                "id='" + id + '\'' +
                 ", name='" + name + '\'' +
                 ", address='" + address + '\'' +
                 ", lat=" + lat +
@@ -141,13 +139,15 @@ public class Station {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         Station station = (Station) o;
         return Double.compare(station.lat, lat) == 0 &&
                 Double.compare(station.lng, lng) == 0 &&
                 availablePorts == station.availablePorts &&
-                Objects.equals(id, station.id) && // Hoạt động cho cả String
+                Objects.equals(id, station.id) &&
                 Objects.equals(name, station.name) &&
                 Objects.equals(address, station.address) &&
                 Objects.equals(status, station.status) &&
@@ -159,4 +159,3 @@ public class Station {
         return Objects.hash(id, name, address, lat, lng, status, availablePorts, location);
     }
 }
-

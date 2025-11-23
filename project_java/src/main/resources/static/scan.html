@@ -1,45 +1,235 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EVCS - Quét mã bắt đầu sạc</title>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:#f5f7fa}
-        .navbar{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:15px 30px;display:flex;justify-content:space-between;align-items:center}
-        .container{max-width:800px;margin:30px auto;padding:0 20px}
-        .card{background:#fff;padding:30px;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.08);margin-bottom:20px;text-align:center}
-        .card h2{margin-bottom:20px;color:#333}
-        .scan-section{display:flex;flex-direction:column;align-items:center;gap:20px}
-        .qr-placeholder{width:250px;height:250px;border:2px dashed #667eea;border-radius:12px;display:flex;align-items:center;justify-content:center;background:#f8f9ff;margin:20px 0}
-        .qr-placeholder .icon{font-size:48px;color:#667eea}
-        .input-group{width:100%;max-width:400px;margin:20px 0}
-        .input-group label{display:block;margin-bottom:8px;font-weight:600;color:#333}
-        .input-group input{width:100%;padding:12px;border:2px solid #ddd;border-radius:8px;font-size:16px;transition:border-color 0.3s}
-        .input-group input:focus{outline:none;border-color:#667eea}
-        .btn{padding:12px 24px;border:none;border-radius:8px;font-weight:600;cursor:pointer;transition:all 0.3s;margin:10px}
-        .btn-primary{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff}
-        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(102,126,234,0.4)}
-        .btn-secondary{background:#f0f0f0;color:#666}
-        .btn-secondary:hover{background:#e0e0e0}
-        .btn:disabled{background:#ccc;cursor:not-allowed;transform:none}
-        .alert{padding:15px;border-radius:8px;margin:15px 0;text-align:left}
-        .alert.success{background:#e8f5e9;color:#2e7d32}
-        .alert.error{background:#ffebee;color:#c62828}
-        .alert.info{background:#e3f2fd;color:#1565c0}
-        .divider{margin:30px 0;height:1px;background:#eee;position:relative}
-        .divider::before{content:'HOẶC';position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:#fff;padding:0 15px;color:#666;font-size:14px}
-        .session-info{background:#f8f9ff;padding:20px;border-radius:8px;margin:20px 0;text-align:left}
-        .session-info h3{margin-bottom:15px;color:#667eea}
-        .info-row{display:flex;justify-content:space-between;margin:8px 0;padding:5px 0;border-bottom:1px solid #eee}
-        .info-row:last-child{border-bottom:none}
-        .loading{display:none;text-align:center;padding:20px}
-        .spinner{width:40px;height:40px;border:4px solid #f3f3f3;border-top:4px solid #667eea;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 10px}
-        @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-        .hidden{display:none}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 0 20px
+        }
+
+        .card {
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, .08);
+            margin-bottom: 20px;
+            text-align: center
+        }
+
+        .card h2 {
+            margin-bottom: 20px;
+            color: #333
+        }
+
+        .scan-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px
+        }
+
+        .qr-placeholder {
+            width: 250px;
+            height: 250px;
+            border: 2px dashed #667eea;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9ff;
+            margin: 20px 0
+        }
+
+        .qr-placeholder .icon {
+            font-size: 48px;
+            color: #667eea
+        }
+
+        .input-group {
+            width: 100%;
+            max-width: 400px;
+            margin: 20px 0
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4)
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #666
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: left
+        }
+
+        .alert.success {
+            background: #e8f5e9;
+            color: #2e7d32
+        }
+
+        .alert.error {
+            background: #ffebee;
+            color: #c62828
+        }
+
+        .alert.info {
+            background: #e3f2fd;
+            color: #1565c0
+        }
+
+        .divider {
+            margin: 30px 0;
+            height: 1px;
+            background: #eee;
+            position: relative
+        }
+
+        .divider::before {
+            content: 'HOẶC';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            padding: 0 15px;
+            color: #666;
+            font-size: 14px
+        }
+
+        .session-info {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: left
+        }
+
+        .session-info h3 {
+            margin-bottom: 15px;
+            color: #667eea
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee
+        }
+
+        .info-row:last-child {
+            border-bottom: none
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg)
+            }
+
+            100% {
+                transform: rotate(360deg)
+            }
+        }
+
+        .hidden {
+            display: none
+        }
     </style>
 </head>
+
 <body>
     <nav class="navbar">
         <h1>⚡ EVCS - Quét mã bắt đầu sạc</h1>
@@ -51,11 +241,11 @@
 
     <div class="container">
         <div id="message"></div>
-        
+
         <div class="card" id="scanCard">
             <h2>Bắt đầu phiên sạc</h2>
             <p>Quét mã QR tại trạm sạc hoặc dùng đặt chỗ để khởi động</p>
-            
+
             <div class="scan-section">
                 <div class="qr-placeholder" id="qrPlaceholder">
                     <div class="icon">📷</div>
@@ -63,13 +253,14 @@
                 <button class="btn btn-primary" onclick="startScan()">Bật camera quét mã</button>
                 <button class="btn btn-secondary" onclick="selectFromGallery()">Chọn ảnh từ thư viện</button>
             </div>
-            
+
             <div class="divider"></div>
-            
+
             <div class="input-group">
                 <label>Đặt chỗ hiện tại:</label>
                 <div id="reservationSummary" style="text-align:left;color:#555"></div>
-                <button class="btn btn-primary" id="startFromReservationBtn" onclick="startFromReservation()" disabled>Bắt đầu sạc từ đặt chỗ</button>
+                <button class="btn btn-primary" id="startFromReservationBtn" onclick="startFromReservation()"
+                    disabled>Bắt đầu sạc từ đặt chỗ</button>
             </div>
         </div>
 
@@ -161,10 +352,10 @@
                     video.style.width = '100%';
                     video.style.height = '100%';
                     video.style.objectFit = 'cover';
-                    
+
                     qrPlaceholder.innerHTML = '';
                     qrPlaceholder.appendChild(video);
-                    
+
                     // Simulate QR code detection (in real app, use QR scanning library)
                     setTimeout(() => {
                         const mockSessionCode = 'SES-' + Math.floor(100000 + Math.random() * 900000);
@@ -199,19 +390,19 @@
                     showAlert('Vui lòng chọn một tập tin ảnh', 'error');
                     return;
                 }
-                
+
                 // VALIDATION: Check file size (max 5MB)
                 if (file.size > 5 * 1024 * 1024) {
                     showAlert('Kích thước ảnh không được vượt quá 5MB', 'error');
                     return;
                 }
-                
+
                 // VALIDATION: Check file type
                 if (!file.type.startsWith('image/')) {
                     showAlert('Vui lòng chọn một tệp hình ảnh hợp lệ', 'error');
                     return;
                 }
-                
+
                 // Simulate QR code detection from image
                 const mockSessionCode = 'SES-' + Math.floor(100000 + Math.random() * 900000);
                 showAlert(`Đã đọc được mã từ ảnh: ${mockSessionCode}`, 'success');
@@ -339,7 +530,7 @@
 
                 const sessionData = await res.json();
                 showAlert('Phiên sạc đã được khởi động thành công!', 'success');
-                
+
                 // Redirect to charging session tracking page
                 setTimeout(() => {
                     window.location.href = `charging.html?sessionId=${sessionData.id}`;
@@ -370,7 +561,7 @@
             const urlParams = new URLSearchParams(window.location.search);
             const reservationId = urlParams.get('reservationId');
             const connectorId = urlParams.get('connectorId');
-            
+
             if (reservationId) {
                 try {
                     const res = await fetchWithAuth(`${API_BASE}/reservations/${reservationId}`);
@@ -384,7 +575,6 @@
                             <div><strong>Thời gian:</strong> ${reservation.startWindow || ''} → ${reservation.endWindow || ''}</div>
                             <div id="qrImageWrap" style="margin-top:10px"></div>
                         `;
-                        // Hiển thị QR cho connector
                         const qrRes = await fetchWithAuth(`${API_BASE}/sessions/reservation/${reservationId}/qr`);
                         if (qrRes.ok) {
                             const qr = await qrRes.json();
@@ -436,4 +626,5 @@
         });
     </script>
 </body>
+
 </html>

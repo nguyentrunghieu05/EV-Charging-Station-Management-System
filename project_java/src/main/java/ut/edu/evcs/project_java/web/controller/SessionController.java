@@ -32,12 +32,12 @@ public class SessionController {
     private final TariffPlanRepository tariffRepo;
 
     public SessionController(SessionService sessionService,
-                             ReservationService reservationService,
-                             QRCodeService qrCodeService,
-                             CurrentUserService currentUserService,
-                             ChargingSessionRepository sessionRepo,
-                             ConnectorRepository connectorRepo,
-                             TariffPlanRepository tariffRepo) {
+            ReservationService reservationService,
+            QRCodeService qrCodeService,
+            CurrentUserService currentUserService,
+            ChargingSessionRepository sessionRepo,
+            ConnectorRepository connectorRepo,
+            TariffPlanRepository tariffRepo) {
         this.sessionService = sessionService;
         this.reservationService = reservationService;
         this.qrCodeService = qrCodeService;
@@ -48,7 +48,8 @@ public class SessionController {
     }
 
     @PostMapping("/{id}/stop")
-    public ChargingSession stopSession(@PathVariable("id") String id, @RequestBody(required=false) Map<String,Object> body) {
+    public ChargingSession stopSession(@PathVariable("id") String id,
+            @RequestBody(required = false) Map<String, Object> body) {
         BigDecimal finalKwh = null;
         BigDecimal totalCostOverride = null;
         if (body != null) {
@@ -58,7 +59,6 @@ public class SessionController {
             if (fk != null) {
                 try {
                     finalKwh = new BigDecimal(fk.toString());
-                    // VALIDATION: finalKwh must be positive
                     if (finalKwh.compareTo(BigDecimal.ZERO) < 0) {
                         throw new IllegalArgumentException("finalKwh must be greater than or equal to 0");
                     }
@@ -81,7 +81,8 @@ public class SessionController {
                     if (totalCostOverride.compareTo(BigDecimal.ZERO) < 0) {
                         totalCostOverride = null;
                     }
-                } catch (NumberFormatException ignored) {}
+                } catch (NumberFormatException ignored) {
+                }
             }
         }
         return sessionService.stopSessionWithCost(id, finalKwh, totalCostOverride);
@@ -121,11 +122,13 @@ public class SessionController {
                 if (conn.getMaxCurrentA() > 0 && conn.getVoltageV() > 0) {
                     dto.setPowerKW(((conn.getMaxCurrentA() * conn.getVoltageV()) / 1000.0));
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         });
 
-        java.util.Optional<ut.edu.evcs.project_java.domain.tariff.TariffPlan> tariffOpt =
-                s.getTariffId() != null ? tariffRepo.findById(s.getTariffId()) : tariffRepo.findFirstByActiveTrue();
+        java.util.Optional<ut.edu.evcs.project_java.domain.tariff.TariffPlan> tariffOpt = s.getTariffId() != null
+                ? tariffRepo.findById(s.getTariffId())
+                : tariffRepo.findFirstByActiveTrue();
         tariffOpt.ifPresent(t -> dto.setUnitPriceVnd(t.getPricePerKWh()));
 
         return dto;
@@ -144,14 +147,17 @@ public class SessionController {
         if (body != null) {
             Object e = body.get("energy");
             Object c = body.get("cost");
-            if (e != null) energy = Double.valueOf(e.toString());
-            if (c != null) cost = Double.valueOf(c.toString());
+            if (e != null)
+                energy = Double.valueOf(e.toString());
+            if (c != null)
+                cost = Double.valueOf(c.toString());
         }
         return sessionService.updateMetrics(id, energy, cost);
     }
 
     @PostMapping("/start-by-connector/{connectorId}")
-    public ChargingSession startByConnector(@PathVariable String connectorId, @RequestBody(required=false) Map<String,Object> body) {
+    public ChargingSession startByConnector(@PathVariable String connectorId,
+            @RequestBody(required = false) Map<String, Object> body) {
         String driverId = currentUserService.getCurrentUserId();
         String vehicleId = body != null ? (String) body.getOrDefault("vehicleId", null) : null;
         return sessionService.manualStartSession(driverId, connectorId, vehicleId, null, "qr-start");
@@ -160,16 +166,16 @@ public class SessionController {
     // ===== Start session from reservation (driver flow) =====
     @PostMapping("/start-from-reservation/{reservationId}")
     public ChargingSession startFromReservation(@PathVariable String reservationId,
-                                                @RequestBody(required=false) Map<String,Object> body) {
+            @RequestBody(required = false) Map<String, Object> body) {
         Reservation r = reservationService.getById(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException("Reservation not found: " + reservationId));
         String driverId = r.getDriverId();
         String connectorId = r.getConnectorId();
         String vehicleId = body != null ? (String) body.getOrDefault("vehicleId", null) : null;
         String notes = body != null ? (String) body.getOrDefault("notes", null) : null;
-        ChargingSession s = sessionService.manualStartSession(driverId, connectorId, vehicleId, notes, "driver-self-start");
+        ChargingSession s = sessionService.manualStartSession(driverId, connectorId, vehicleId, notes,
+                "driver-self-start");
         s.setReservationId(reservationId);
-        // Đồng bộ startTime với thời gian đặt chỗ
         if (r.getStartWindow() != null) {
             s.setStartTime(r.getStartWindow());
             if (r.getEndWindow() != null) {

@@ -59,7 +59,7 @@ public class SecurityConfig {
                                 "/index.html",
                                 "/auth.html",
                                 "/home.html",
-                                // newly added public frontend pages
+
                                 "/scan.html",
                                 "/charging.html",
                                 "/payment.html",
@@ -68,7 +68,7 @@ public class SecurityConfig {
                                 "/favicon.ico",
                                 "/stations.html",
                                 "/reservation.html",
-                                // thêm lịch sử sạc và xe
+
                                 "/vehicles.html",
                                 "/sessions.html",
                                 "/notifications.html",
@@ -80,7 +80,6 @@ public class SecurityConfig {
                                 "/images/**",
                                 "/webjars/**",
 
-                                // Admin pages - allow access for role checking in JS
                                 "/admin/dashboard.html",
                                 "/admin/users.html",
                                 "/admin/stations.html",
@@ -91,27 +90,22 @@ public class SecurityConfig {
                                 "/admin/**.css",
                                 "/admin/**.js",
 
-                                // swagger + health
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/actuator/health",
 
-                                // auth APIs
                                 "/api/auth/**",
 
-                                // VNPay APIs - public endpoints
                                 "/api/vnpay/test",
                                 "/api/vnpay/return",
                                 "/api/vnpay/ipn")
                         .permitAll()
 
-                        // Protect Admin APIs - require ADMIN role
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                        // Require authentication for all other requests
                         .anyRequest().authenticated())
                 .httpBasic(AbstractHttpConfigurer::disable)
-                // JWT filter
+
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

@@ -19,9 +19,8 @@ public class JwtService {
 
     public JwtService(
             @Value("${app.jwt.secret}") String secret,
-            @Value("${app.jwt.access-ttl-minutes:15}") long accessTtlMinutes
-    ) {
-        // secret ≥ 256-bit cho HS256. Nếu bạn đang để base64, có thể dùng Keys.hmacShaKeyFor(Base64.getDecoder().decode(secret))
+            @Value("${app.jwt.access-ttl-minutes:15}") long accessTtlMinutes) {
+
         this.key = Keys.hmacShaKeyFor(secret.getBytes());
         this.accessTtlMinutes = accessTtlMinutes;
     }

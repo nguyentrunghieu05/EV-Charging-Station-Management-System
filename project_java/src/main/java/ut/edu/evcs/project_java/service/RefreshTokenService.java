@@ -21,7 +21,6 @@ public class RefreshTokenService {
         this.jwtService = jwtService;
     }
 
-    // Khi phát hành refresh token mới, lưu phẳng userId
     public RefreshToken issue(User user, String token, OffsetDateTime expiresAt, String ip, String ua) {
         RefreshToken rt = new RefreshToken();
         rt.setUserId(user.getId());
@@ -44,12 +43,11 @@ public class RefreshTokenService {
         repo.save(rt);
     }
 
-    /** Không dùng entity User; chỉ đọc userId từ refresh_tokens rồi ký Access Token. */
     public TokenPair refresh(String rawRefreshToken) {
         RefreshToken rt = findValid(rawRefreshToken)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid or expired refresh token"));
 
-        String userId = rt.getUserId(); // <— không lazy-load
+        String userId = rt.getUserId();
         String access = jwtService.issueAccess(userId);
         return new TokenPair(access);
     }

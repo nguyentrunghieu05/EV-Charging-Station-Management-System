@@ -42,7 +42,6 @@ public class PdfService {
                 builder.toStream(os);
                 builder.run();
             }
-            // return endpoint path (controller exposes /api/invoices/{id}/pdf)
             return "/api/invoices/" + invoiceId + "/pdf";
         } catch (Exception e) {
             throw new RuntimeException("Failed to generate PDF", e);

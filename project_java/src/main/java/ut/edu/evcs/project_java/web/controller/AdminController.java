@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.format.annotation.DateTimeFormat;
-// import org.springframework.http.ResponseEntity; // Bị loại bỏ vì không sử dụng trong phương thức trả về
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,7 +26,7 @@ import ut.edu.evcs.project_java.web.dto.admin.UsageStatsDTO;
 @RestController
 @RequestMapping("/api/admin")
 @SecurityRequirement(name = "bearerAuth")
-@PreAuthorize("hasRole('ADMIN')") // Đã kiểm tra và đảm bảo bảo mật đúng
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
     private final AdminDashboardService dashboardService;
@@ -40,8 +39,7 @@ public class AdminController {
     @GetMapping("/dashboard/revenue")
     public RevenueSummaryDTO revenue(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
-    ) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         return dashboardService.getRevenueSummary(from, to);
     }
 
@@ -49,8 +47,7 @@ public class AdminController {
     @GetMapping("/dashboard/usage-stats")
     public UsageStatsDTO usageStats(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
-    ) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         return dashboardService.getUsageStats(from, to);
     }
 
@@ -58,8 +55,7 @@ public class AdminController {
     @GetMapping("/dashboard/peak-hours")
     public List<PeakHourDTO> peakHours(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
-    ) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         return dashboardService.getPeakHours(from, to);
     }
 
@@ -67,14 +63,11 @@ public class AdminController {
     @PostMapping("/stations/{id}/toggle")
     public Map<String, Object> toggleStation(
             @PathVariable("id") String stationId,
-            @RequestParam("status") StationStatus status
-    ) {
+            @RequestParam("status") StationStatus status) {
         dashboardService.toggleStationStatus(stationId, status);
-        // Trả về map để báo cáo trạng thái thành công
         return Map.of(
                 "stationId", stationId,
                 "newStatus", status.name(),
-                "message", "Đã cập nhật trạng thái trạm thành công."
-        );
+                "message", "Đã cập nhật trạng thái trạm thành công.");
     }
 }
