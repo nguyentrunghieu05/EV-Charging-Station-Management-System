@@ -7,7 +7,7 @@ public class CreateSubscriptionRequest {
     @NotBlank(message = "Plan ID không được để trống")
     private String planId;
 
-    private Integer durationDays; // Optional: override default duration
+    private Integer durationDays;
 
     public CreateSubscriptionRequest() {
     }

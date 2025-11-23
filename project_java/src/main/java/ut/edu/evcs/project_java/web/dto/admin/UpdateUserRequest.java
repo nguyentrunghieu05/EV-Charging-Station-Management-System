@@ -5,7 +5,7 @@ public class UpdateUserRequest {
     private String fullName;
     private String phone;
     private String userType;
-    private String password; // Optional: only if admin wants to reset password
+    private String password;
 
     public UpdateUserRequest() {
     }

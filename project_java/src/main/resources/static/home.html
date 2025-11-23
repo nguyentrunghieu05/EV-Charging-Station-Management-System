@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,12 +11,12 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #f5f7fa;
         }
-        
+
         .navbar {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -23,25 +24,25 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
-        
+
         .navbar h1 {
             font-size: 24px;
         }
-        
+
         .user-info {
             display: flex;
             align-items: center;
             gap: 20px;
         }
-        
+
         .user-info span {
             font-weight: 500;
         }
-        
+
         .btn-logout {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
             border: 1px solid white;
             color: white;
             padding: 8px 16px;
@@ -49,75 +50,75 @@
             cursor: pointer;
             transition: all 0.3s;
         }
-        
+
         .btn-logout:hover {
             background: white;
             color: #667eea;
         }
-        
+
         .container {
             max-width: 1200px;
             margin: 30px auto;
             padding: 0 20px;
         }
-        
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
-        
+
         .stat-card {
             background: white;
             padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
             transition: transform 0.3s;
         }
-        
+
         .stat-card:hover {
             transform: translateY(-5px);
         }
-        
+
         .stat-card h3 {
             color: #666;
             font-size: 14px;
             margin-bottom: 10px;
             text-transform: uppercase;
         }
-        
+
         .stat-card .value {
             font-size: 32px;
             font-weight: bold;
             color: #667eea;
             margin-bottom: 5px;
         }
-        
+
         .stat-card .label {
             font-size: 13px;
             color: #999;
         }
-        
+
         .quick-actions {
             background: white;
             padding: 30px;
             border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
             margin-bottom: 30px;
         }
-        
+
         .quick-actions h2 {
             margin-bottom: 20px;
             color: #333;
         }
-        
+
         .action-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
         }
-        
+
         .action-btn {
             padding: 20px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -130,48 +131,80 @@
             transition: all 0.3s;
             text-align: center;
         }
-        
+
         .action-btn:hover {
             transform: translateY(-3px);
             box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
         }
-        
+
         .section {
             background: white;
             padding: 30px;
             border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
             margin-bottom: 30px;
         }
-        
+
         .section h2 {
             margin-bottom: 20px;
             color: #333;
         }
-        .section-header { display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; }
-        .badge-indicator { background:#ff5252; color:#fff; border-radius:12px; padding:2px 8px; font-size:12px; margin-left:10px; }
-        .dot { width:8px; height:8px; background:#ff5252; border-radius:50%; display:inline-block; margin-left:6px; vertical-align:middle; }
-        .link-btn { padding:8px 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:600; }
-        
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .badge-indicator {
+            background: #ff5252;
+            color: #fff;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: #ff5252;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        .link-btn {
+            padding: 8px 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
         .loading {
             text-align: center;
             padding: 40px;
             color: #999;
         }
-        
+
         .empty-state {
             text-align: center;
             padding: 40px;
             color: #999;
         }
-        
+
         .empty-state svg {
             width: 80px;
             height: 80px;
             margin-bottom: 20px;
             opacity: 0.3;
         }
-        
+
         .list-item {
             padding: 15px;
             border-bottom: 1px solid #f0f0f0;
@@ -179,39 +212,40 @@
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .list-item:last-child {
             border-bottom: none;
         }
-        
+
         .badge {
             padding: 4px 12px;
             border-radius: 12px;
             font-size: 12px;
             font-weight: 600;
         }
-        
+
         .badge.online {
             background: #e8f5e9;
             color: #2e7d32;
         }
-        
+
         .badge.pending {
             background: #fff3e0;
             color: #f57c00;
         }
-        
+
         .badge.active {
             background: #e3f2fd;
             color: #1565c0;
         }
-        
+
         .icon {
             font-size: 40px;
             margin-bottom: 10px;
         }
     </style>
 </head>
+
 <body>
     <nav class="navbar">
         <h1>⚡ EVCS Dashboard</h1>
@@ -220,7 +254,7 @@
             <button class="btn-logout" onclick="logout()">Đăng xuất</button>
         </div>
     </nav>
-    
+
     <div class="container">
         <!-- Stats Cards -->
         <div class="stats-grid">
@@ -230,21 +264,21 @@
                 <div class="value" id="walletBalance">...</div>
                 <div class="label">VND</div>
             </div>
-            
+
             <div class="stat-card">
                 <div class="icon">🚗</div>
                 <h3>Xe của tôi</h3>
                 <div class="value" id="vehicleCount">...</div>
                 <div class="label">phương tiện</div>
             </div>
-            
+
             <div class="stat-card">
                 <div class="icon">📅</div>
                 <h3>Đặt chỗ</h3>
                 <div class="value" id="reservationCount">...</div>
                 <div class="label">đang hoạt động</div>
             </div>
-            
+
             <div class="stat-card">
                 <div class="icon">🔔</div>
                 <h3>Thông báo</h3>
@@ -252,7 +286,7 @@
                 <div class="label">chưa đọc</div>
             </div>
         </div>
-        
+
         <!-- Quick Actions -->
         <div class="quick-actions">
             <h2>Thao tác nhanh</h2>
@@ -283,13 +317,13 @@
                 </button>
             </div>
         </div>
-        
+
         <!-- Recent Stations -->
         <div class="section">
             <h2>Trạm sạc gần bạn</h2>
             <div id="stationsList" class="loading">Đang tải...</div>
         </div>
-        
+
         <!-- Recent Notifications -->
         <div class="section">
             <div class="section-header">
@@ -307,31 +341,31 @@
         const API_BASE = '/api';
         let token = localStorage.getItem('accessToken');
         let user = JSON.parse(localStorage.getItem('user') || '{}');
-        
+
         // Check authentication
         if (!token || !user.id) {
             window.location.href = 'auth.html';
         }
-        
+
         // Set user name
         document.getElementById('userName').textContent = user.fullName || user.username || 'User';
-        
+
         async function fetchWithAuth(url, options = {}) {
             const headers = {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
                 ...options.headers
             };
-            
+
             try {
                 const res = await fetch(url, { ...options, headers });
-                
+
                 if (res.status === 401) {
                     localStorage.clear();
                     window.location.href = 'auth.html';
                     return null;
                 }
-                
+
                 if (!res.ok) throw new Error('Request failed');
                 return await res.json();
             } catch (err) {
@@ -339,45 +373,45 @@
                 return null;
             }
         }
-        
+
         async function loadDashboard() {
             // Load wallet balance
             const wallet = await fetchWithAuth(`${API_BASE}/wallets/user/${user.id}`);
             if (wallet) {
-                document.getElementById('walletBalance').textContent = 
+                document.getElementById('walletBalance').textContent =
                     new Intl.NumberFormat('vi-VN').format(wallet.balance);
             }
-            
+
             // Load vehicles
             const vehicles = await fetchWithAuth(`${API_BASE}/vehicles/driver/${user.id}`);
             if (Array.isArray(vehicles)) {
                 document.getElementById('vehicleCount').textContent = vehicles.length;
             }
-            
+
             // Load active reservations
             const reservations = await fetchWithAuth(`${API_BASE}/reservations/driver/${user.id}/active`);
             if (Array.isArray(reservations)) {
                 document.getElementById('reservationCount').textContent = reservations.length;
             }
-            
+
             // Load unread notifications
             const notifCount = await fetchWithAuth(`${API_BASE}/notifications/unread-count`);
             if (notifCount !== null && notifCount !== undefined) {
                 document.getElementById('notificationCount').textContent = notifCount;
                 setUnreadIndicator(notifCount);
             }
-            
+
             // Load nearby stations (Ho Chi Minh City center)
             const stations = await fetchWithAuth(
                 `${API_BASE}/stations/nearby?lat=10.7744&lng=106.7019&radiusKm=10&limit=5`
             );
-            
+
             const stationsList = document.getElementById('stationsList');
             if (Array.isArray(stations) && stations.length > 0) {
                 stationsList.innerHTML = stations.map(s => {
                     const statusClass =
                         s.status === 'ONLINE' ? 'online' :
-                        s.status === 'ACTIVE' ? 'active' : 'pending';
+                            s.status === 'ACTIVE' ? 'active' : 'pending';
                     return `
                         <div class="list-item">
                             <div>
@@ -391,7 +425,7 @@
             } else {
                 stationsList.innerHTML = '<div class="empty-state">Không tìm thấy trạm sạc gần bạn</div>';
             }
-            
+
             await loadRecentNotifications();
             setTimeout(loadRecentNotifications, 2000);
         }
@@ -425,7 +459,7 @@
                 el.innerHTML = '';
             }
         }
-        
+
         function logout() {
             if (confirm('Bạn có chắc muốn đăng xuất?')) {
                 fetchWithAuth(`${API_BASE}/auth/logout`, { method: 'POST' });
@@ -433,49 +467,49 @@
                 window.location.href = 'auth.html';
             }
         }
-        
+
         function openStations() {
             //alert('Tính năng tìm trạm sạc - Sẽ được phát triển tiếp');
             window.location.href = 'stations.html';
         }
-        
+
         function openReservation() {
-            window.location.href = 'stations.html';  // Hoặc '/stations.html' nếu cần
+            window.location.href = 'stations.html';
         }
-        
+
         function openScan() {
             window.location.href = 'scan.html';
         }
-        
+
         function openVehicles() {
             window.location.href = 'vehicles.html';
         }
-        
+
         function openSessions() {
             window.location.href = 'sessions.html';
         }
-        
+
         function openInvoices() {
             window.location.href = 'invoices.html';
         }
-        
+
         function openNotifications() {
             window.location.href = 'notifications.html';
         }
-        
+
         function openWallet() {
             const amount = prompt('Nhập số tiền muốn nạp (VND):');
             if (amount && !isNaN(amount) && amount > 0) {
                 topUpWallet(parseFloat(amount));
             }
         }
-        
+
         async function topUpWallet(amount) {
             const result = await fetchWithAuth(`${API_BASE}/wallets/topup`, {
                 method: 'POST',
                 body: JSON.stringify({ userId: user.id, amount })
             });
-            
+
             if (result) {
                 alert(`Nạp tiền thành công! Số dư mới: ${new Intl.NumberFormat('vi-VN').format(result.balance)} VND`);
                 loadDashboard();
@@ -483,8 +517,9 @@
                 alert('Nạp tiền thất bại');
             }
         }
-        
+
         loadDashboard();
     </script>
 </body>
+
 </html>

@@ -22,22 +22,22 @@ public class Payment {
     private String invoiceId;
 
     @Column(nullable = false)
-    private String method; // e.g. "EWallet", "Banking", "InternalWallet"
+    private String method;
 
     @Column(nullable = false)
-    private String status; // e.g. "PENDING", "SETTLED", "FAILED"
+    private String status;
 
     @Column(nullable = false)
     private BigDecimal amount;
 
     @Column(name = "provider_ref")
-    private String providerRef; // reference id from payment gateway
+    private String providerRef;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
-
-    public Payment() {}
+    public Payment() {
+    }
 
     public Payment(String invoiceId, String method, String status, BigDecimal amount, String providerRef) {
         this.invoiceId = invoiceId;
@@ -46,7 +46,6 @@ public class Payment {
         this.amount = amount;
         this.providerRef = providerRef;
     }
-
 
     public String getId() {
         return id;

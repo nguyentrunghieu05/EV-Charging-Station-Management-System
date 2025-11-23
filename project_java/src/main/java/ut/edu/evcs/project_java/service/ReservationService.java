@@ -22,14 +22,11 @@ public class ReservationService {
     private final ApplicationEventPublisher eventPublisher;
 
     public ReservationService(ReservationRepository repo,
-                              ApplicationEventPublisher eventPublisher) {
+            ApplicationEventPublisher eventPublisher) {
         this.repo = repo;
         this.eventPublisher = eventPublisher;
     }
 
-    /**
-     * Tạo reservation mới
-     */
     @Transactional
     public Reservation create(Reservation reservation) {
         if (reservation.getDriverId() == null || reservation.getDriverId().isBlank()) {
@@ -45,22 +42,18 @@ public class ReservationService {
                 reservation.getStartWindow().isEqual(reservation.getEndWindow())) {
             throw new IllegalArgumentException("startWindow must be before endWindow");
         }
-        
-        // VALIDATION: Window cannot be more than 24 hours (prevent long reservations)
+
         long hours = ChronoUnit.HOURS.between(
-            reservation.getStartWindow(), 
-            reservation.getEndWindow()
-        );
+                reservation.getStartWindow(),
+                reservation.getEndWindow());
         if (hours > 24) {
             throw new IllegalArgumentException("Reservation time window cannot exceed 24 hours");
         }
-        
-        // VALIDATION: Start time must be in the future
+
         if (reservation.getStartWindow().isBefore(LocalDateTime.now())) {
             throw new IllegalArgumentException("Reservation start time must be in the future");
         }
 
-        // CONFLICT CHECK: Check for overlapping reservations on this connector
         if (hasConflict(reservation.getConnectorId(), reservation.getStartWindow(), reservation.getEndWindow())) {
             throw new IllegalStateException("Time slot overlaps with existing reservation on this connector");
         }
@@ -81,9 +74,6 @@ public class ReservationService {
         }
     }
 
-    /**
-     * Huỷ reservation
-     */
     @Transactional
     public void cancel(@NonNull String id) {
         Reservation r = repo.findById(id)
@@ -99,9 +89,6 @@ public class ReservationService {
         eventPublisher.publishEvent(new ReservationCancelledEvent(r));
     }
 
-    /**
-     * Confirm reservation
-     */
     @Transactional
     public void confirm(@NonNull String id) {
         Reservation r = repo.findById(id)
@@ -120,9 +107,6 @@ public class ReservationService {
         eventPublisher.publishEvent(new ReservationConfirmedEvent(r));
     }
 
-    /**
-     * Kiểm tra xem có conflict với reservation hiện tại không
-     */
     public boolean hasConflict(String connectorId, LocalDateTime start, LocalDateTime end) {
         return repo.findAll().stream()
                 .filter(r -> r.getConnectorId().equals(connectorId))
@@ -131,18 +115,12 @@ public class ReservationService {
                         start.isAfter(r.getEndWindow()) || start.isEqual(r.getEndWindow())));
     }
 
-    /**
-     * Lấy reservation của driver
-     */
     public List<Reservation> getByDriverId(String driverId) {
         return repo.findAll().stream()
                 .filter(r -> r.getDriverId().equals(driverId))
                 .toList();
     }
 
-    /**
-     * Lấy reservation active của driver (PENDING hoặc CONFIRMED)
-     */
     public List<Reservation> getActiveByDriverId(String driverId) {
         return repo.findAll().stream()
                 .filter(r -> r.getDriverId().equals(driverId))
@@ -150,9 +128,6 @@ public class ReservationService {
                 .toList();
     }
 
-    /**
-     * Lấy reservation của connector trong khoảng thời gian
-     */
     public List<Reservation> getByConnectorAndTimeRange(String connectorId, LocalDateTime start, LocalDateTime end) {
         return repo.findAll().stream()
                 .filter(r -> r.getConnectorId().equals(connectorId))
@@ -162,16 +137,10 @@ public class ReservationService {
                 .toList();
     }
 
-    /**
-     * Lấy chi tiết reservation
-     */
     public Optional<Reservation> getById(@NonNull String id) {
         return repo.findById(id);
     }
 
-    /**
-     * Lấy tất cả reservation
-     */
     public List<Reservation> getAll() {
         return repo.findAll();
     }

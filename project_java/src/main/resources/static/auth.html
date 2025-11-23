@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +11,7 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -20,43 +21,43 @@
             align-items: center;
             padding: 20px;
         }
-        
+
         .container {
             background: white;
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             overflow: hidden;
             width: 100%;
             max-width: 400px;
         }
-        
+
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 40px 30px;
             text-align: center;
             color: white;
         }
-        
+
         .header h1 {
             font-size: 28px;
             margin-bottom: 10px;
         }
-        
+
         .header p {
             opacity: 0.9;
             font-size: 14px;
         }
-        
+
         .form-container {
             padding: 40px 30px;
         }
-        
+
         .tabs {
             display: flex;
             margin-bottom: 30px;
             border-bottom: 2px solid #f0f0f0;
         }
-        
+
         .tab {
             flex: 1;
             padding: 12px;
@@ -68,16 +69,16 @@
             border-bottom: 3px solid transparent;
             margin-bottom: -2px;
         }
-        
+
         .tab.active {
             color: #667eea;
             border-bottom-color: #667eea;
         }
-        
+
         .form-group {
             margin-bottom: 20px;
         }
-        
+
         .form-group label {
             display: block;
             margin-bottom: 8px;
@@ -85,7 +86,7 @@
             font-weight: 500;
             font-size: 14px;
         }
-        
+
         .form-group input {
             width: 100%;
             padding: 12px 15px;
@@ -94,12 +95,12 @@
             font-size: 14px;
             transition: border-color 0.3s;
         }
-        
+
         .form-group input:focus {
             outline: none;
             border-color: #667eea;
         }
-        
+
         .btn {
             width: 100%;
             padding: 14px;
@@ -112,16 +113,16 @@
             cursor: pointer;
             transition: transform 0.2s;
         }
-        
+
         .btn:hover {
             transform: translateY(-2px);
         }
-        
+
         .btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
         }
-        
+
         .error {
             background: #fee;
             color: #c33;
@@ -131,7 +132,7 @@
             font-size: 14px;
             border-left: 4px solid #c33;
         }
-        
+
         .success {
             background: #efe;
             color: #3c3;
@@ -141,16 +142,16 @@
             font-size: 14px;
             border-left: 4px solid #3c3;
         }
-        
+
         .hidden {
             display: none;
         }
-        
+
         .loading {
             text-align: center;
             padding: 20px;
         }
-        
+
         .spinner {
             border: 3px solid #f3f3f3;
             border-top: 3px solid #667eea;
@@ -160,28 +161,34 @@
             animation: spin 1s linear infinite;
             margin: 0 auto;
         }
-        
+
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="header">
             <h1>⚡ EVCS</h1>
             <p>Hệ thống quản lý trạm sạc xe điện</p>
         </div>
-        
+
         <div class="form-container">
             <div class="tabs">
                 <div class="tab active" onclick="switchTab('login', this)">Đăng nhập</div>
                 <div class="tab" onclick="switchTab('register', this)">Đăng ký</div>
             </div>
-            
+
             <div id="message"></div>
-            
+
             <form id="loginForm" onsubmit="handleLogin(event)">
                 <div class="form-group">
                     <label>Email hoặc Username</label>
@@ -193,7 +200,7 @@
                 </div>
                 <button type="submit" class="btn">Đăng nhập</button>
             </form>
-            
+
             <form id="registerForm" class="hidden" onsubmit="handleRegister(event)">
                 <div class="form-group">
                     <label>Email</label>
@@ -209,31 +216,31 @@
                 </div>
                 <div class="form-group">
                     <div class="form-group">
-                    <label>Số điện thoại</label>
-                    <input type="tel" name="phone" placeholder="0901234567">
-                </div>
-                <div class="form-group">
-                    <label>Mật khẩu</label>
-                    <input type="password" name="password" required placeholder="Tối thiểu 6 ký tự" minlength="6">
-                </div>
-                <button type="submit" class="btn">Đăng ký</button>
+                        <label>Số điện thoại</label>
+                        <input type="tel" name="phone" placeholder="0901234567">
+                    </div>
+                    <div class="form-group">
+                        <label>Mật khẩu</label>
+                        <input type="password" name="password" required placeholder="Tối thiểu 6 ký tự" minlength="6">
+                    </div>
+                    <button type="submit" class="btn">Đăng ký</button>
             </form>
         </div>
     </div>
 
     <script>
         const API_BASE = '/api';
-        
+
         function switchTab(tab, elem) {
             const tabs = document.querySelectorAll('.tab');
             tabs.forEach(t => t.classList.remove('active'));
             if (elem) elem.classList.add('active');
-            
+
             document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
             document.getElementById('registerForm').classList.toggle('hidden', tab !== 'register');
             document.getElementById('message').innerHTML = '';
         }
-        
+
         function showMessage(msg, type = 'error') {
             const msgDiv = document.getElementById('message');
             msgDiv.className = type;
@@ -250,7 +257,7 @@
             const btn = form.querySelector('button');
             btn.disabled = true;
             btn.textContent = 'Đang đăng nhập...';
-            
+
             try {
                 const res = await fetch(`${API_BASE}/auth/login`, {
                     method: 'POST',
@@ -260,33 +267,28 @@
                         password: form.password.value
                     })
                 });
-                
+
                 const data = await res.json().catch(() => ({}));
-                
+
                 if (res.ok) {
                     localStorage.setItem('accessToken', data.accessToken);
                     localStorage.setItem('user', JSON.stringify(data.user));
-                    
-                    // === LOGIC CHUYỂN HƯỚNG ADMIN ĐÃ CẬP NHẬT (SỬ DỤNG data.user.type) ===
-                    
-                    const userType = data.user ? data.user.type : ''; 
 
-                    if (userType === 'ADMIN') { // Kiểm tra role ADMIN
+
+                    const userType = data.user ? data.user.type : '';
+
+                    if (userType === 'ADMIN') {
                         showMessage('Đăng nhập Admin thành công! Đang chuyển hướng...', 'success');
                         setTimeout(() => {
-                            // Chuyển hướng đến trang Admin Dashboard trong thư mục 'admin'
                             window.location.href = 'admin/dashboard.html';
                         }, 1000);
                     } else {
-                        // Nếu không phải Admin, chuyển hướng đến trang Home
                         showMessage('Đăng nhập thành công! Đang chuyển hướng...', 'success');
                         setTimeout(() => {
                             window.location.href = 'home.html';
                         }, 1000);
                     }
-                    
-                    // =================================================================
-                    
+
                 } else {
                     showMessage(data.message || 'Đăng nhập thất bại');
                 }
@@ -297,14 +299,14 @@
                 btn.textContent = 'Đăng nhập';
             }
         }
-        
+
         async function handleRegister(e) {
             e.preventDefault();
             const form = e.target;
             const btn = form.querySelector('button');
             btn.disabled = true;
             btn.textContent = 'Đang đăng ký...';
-            
+
             try {
                 const res = await fetch(`${API_BASE}/auth/register`, {
                     method: 'POST',
@@ -317,9 +319,9 @@
                         password: form.password.value
                     })
                 });
-                
+
                 const data = await res.json().catch(() => ({}));
-                
+
                 if (res.ok) {
                     localStorage.setItem('accessToken', data.accessToken);
                     localStorage.setItem('user', JSON.stringify(data.user));
@@ -337,10 +339,11 @@
                 btn.textContent = 'Đăng ký';
             }
         }
-        
+
         if (localStorage.getItem('accessToken')) {
             window.location.href = 'home.html';
         }
     </script>
 </body>
+
 </html>

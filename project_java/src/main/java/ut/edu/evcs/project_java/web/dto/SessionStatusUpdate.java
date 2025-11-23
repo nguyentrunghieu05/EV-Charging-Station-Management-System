@@ -4,14 +4,15 @@ public class SessionStatusUpdate {
 
     private String sessionId;
     private String connectorId;
-    private String status; // ví dụ: "CHARGING", "STOPPED", "COMPLETED"
-    private double energyDelivered; // kWh
-    private double currentPower; // kW
+    private String status;
+    private double energyDelivered;
+    private double currentPower;
 
     public SessionStatusUpdate() {
     }
 
-    public SessionStatusUpdate(String sessionId, String connectorId, String status, double energyDelivered, double currentPower) {
+    public SessionStatusUpdate(String sessionId, String connectorId, String status, double energyDelivered,
+            double currentPower) {
         this.sessionId = sessionId;
         this.connectorId = connectorId;
         this.status = status;

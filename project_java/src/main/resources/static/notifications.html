@@ -1,38 +1,173 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EVCS - Thông báo</title>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:#f5f7fa}
-        .navbar{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:15px 30px;display:flex;justify-content:space-between;align-items:center}
-        .container{max-width:1100px;margin:30px auto;padding:0 20px}
-        .card{background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.08);margin-bottom:20px}
-        .card h2{margin-bottom:15px;color:#333}
-        .toolbar{display:flex;gap:10px;margin-bottom:10px;align-items:center}
-        .btn{padding:10px 14px;border:none;border-radius:8px;font-weight:600;cursor:pointer}
-        .btn-primary{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff}
-        .btn-secondary{background:#f0f0f0;color:#666}
-        .toggle{display:flex;gap:6px;align-items:center}
-        table{width:100%;border-collapse:collapse}
-        th,td{padding:12px;border-bottom:1px solid #eee;text-align:left;font-size:14px}
-        tr.clickable{cursor:pointer}
-        .badge{padding:4px 10px;border-radius:12px;font-size:12px;font-weight:600}
-        .badge.unread{background:#fff3e0;color:#f57c00}
-        .badge.read{background:#e8f5e9;color:#2e7d32}
-        .pagination{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
-        .split{display:grid;grid-template-columns:2fr 1fr;gap:20px}
-        .detail{background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.08)}
-        .detail h3{margin-bottom:8px}
-        .kv{display:grid;grid-template-columns:140px 1fr;gap:8px;margin-top:10px}
-        .alert{padding:12px;border-radius:8px;margin-bottom:15px}
-        .alert.error{background:#ffebee;color:#c62828}
-        .hidden{display:none}
-        .meta{font-family:ui-monospace,Consolas,monospace;font-size:12px;background:#fafafa;border:1px solid #eee;border-radius:8px;padding:10px;white-space:pre-wrap}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 0 20px
+        }
+
+        .card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, .08);
+            margin-bottom: 20px
+        }
+
+        .card h2 {
+            margin-bottom: 15px;
+            color: #333
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center
+        }
+
+        .btn {
+            padding: 10px 14px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #666
+        }
+
+        .toggle {
+            display: flex;
+            gap: 6px;
+            align-items: center
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+            font-size: 14px
+        }
+
+        tr.clickable {
+            cursor: pointer
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600
+        }
+
+        .badge.unread {
+            background: #fff3e0;
+            color: #f57c00
+        }
+
+        .badge.read {
+            background: #e8f5e9;
+            color: #2e7d32
+        }
+
+        .pagination {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 10px
+        }
+
+        .split {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px
+        }
+
+        .detail {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, .08)
+        }
+
+        .detail h3 {
+            margin-bottom: 8px
+        }
+
+        .kv {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 8px;
+            margin-top: 10px
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px
+        }
+
+        .alert.error {
+            background: #ffebee;
+            color: #c62828
+        }
+
+        .hidden {
+            display: none
+        }
+
+        .meta {
+            font-family: ui-monospace, Consolas, monospace;
+            font-size: 12px;
+            background: #fafafa;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 10px;
+            white-space: pre-wrap
+        }
     </style>
 </head>
+
 <body>
     <nav class="navbar">
         <h1>🔔 EVCS - Thông báo</h1>
@@ -66,7 +201,11 @@
                             <th>Trạng thái</th>
                         </tr>
                     </thead>
-                    <tbody id="notifTable"><tr><td colspan="5">Đang tải...</td></tr></tbody>
+                    <tbody id="notifTable">
+                        <tr>
+                            <td colspan="5">Đang tải...</td>
+                        </tr>
+                    </tbody>
                 </table>
                 <div class="pagination">
                     <button class="btn btn-secondary" onclick="prevPage()">Trước</button>
@@ -77,17 +216,33 @@
 
             <div id="detailCard" class="detail hidden">
                 <h3 id="dTitle"></h3>
-                <div class="kv"><div>Loại</div><div id="dType"></div></div>
-                <div class="kv"><div>Kênh</div><div id="dChannel"></div></div>
-                <div class="kv"><div>Trạng thái</div><div id="dStatus"></div></div>
-                <div class="kv"><div>Tạo lúc</div><div id="dCreated"></div></div>
-                <div class="kv"><div>Đọc lúc</div><div id="dReadAt"></div></div>
+                <div class="kv">
+                    <div>Loại</div>
+                    <div id="dType"></div>
+                </div>
+                <div class="kv">
+                    <div>Kênh</div>
+                    <div id="dChannel"></div>
+                </div>
+                <div class="kv">
+                    <div>Trạng thái</div>
+                    <div id="dStatus"></div>
+                </div>
+                <div class="kv">
+                    <div>Tạo lúc</div>
+                    <div id="dCreated"></div>
+                </div>
+                <div class="kv">
+                    <div>Đọc lúc</div>
+                    <div id="dReadAt"></div>
+                </div>
                 <div style="margin-top:12px;font-weight:600">Nội dung</div>
                 <div id="dMessage" style="margin-top:6px"></div>
                 <div style="margin-top:12px;font-weight:600">Metadata</div>
                 <div id="dMeta" class="meta"></div>
                 <div style="margin-top:12px">
-                    <button id="btnMarkRead" class="btn btn-primary" onclick="markSelectedRead()">Đánh dấu đã đọc</button>
+                    <button id="btnMarkRead" class="btn btn-primary" onclick="markSelectedRead()">Đánh dấu đã
+                        đọc</button>
                 </div>
             </div>
         </div>
@@ -98,14 +253,14 @@
         let token = localStorage.getItem('accessToken');
         let user = JSON.parse(localStorage.getItem('user') || '{}');
         if (!token) { window.location.href = 'auth.html'; }
-        let state = { page:0, size:10, content:[], totalPages:0, totalElements:0 };
+        let state = { page: 0, size: 10, content: [], totalPages: 0, totalElements: 0 };
         let selected = null;
 
-        function showMsg(text, type='error') {
+        function showMsg(text, type = 'error') {
             const m = document.getElementById('message');
             m.className = 'alert ' + type;
             m.textContent = text;
-            setTimeout(()=>{ m.className=''; m.textContent=''; }, 4000);
+            setTimeout(() => { m.className = ''; m.textContent = ''; }, 4000);
         }
 
         async function refreshAccessToken() {
@@ -122,7 +277,7 @@
             } catch { return false; }
         }
 
-        async function fetchWithAuth(url, options={}) {
+        async function fetchWithAuth(url, options = {}) {
             const opts = Object.assign({}, options);
             opts.headers = Object.assign({}, opts.headers, { 'Authorization': `Bearer ${token}` });
             let res = await fetch(url, opts);
@@ -138,14 +293,14 @@
         function fmt(dt) {
             if (!dt) return '';
             const d = new Date(dt);
-            return d.toLocaleString('vi-VN', { hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit', year:'numeric' });
+            return d.toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
         }
 
         function reload() { loadPage(state.page); }
-        function prevPage() { if (state.page>0) loadPage(state.page-1); }
-        function nextPage() { if (state.page+1 < state.totalPages) loadPage(state.page+1); }
+        function prevPage() { if (state.page > 0) loadPage(state.page - 1); }
+        function nextPage() { if (state.page + 1 < state.totalPages) loadPage(state.page + 1); }
 
-        async function loadPage(page=0) {
+        async function loadPage(page = 0) {
             const tbody = document.getElementById('notifTable');
             try {
                 const res = await fetchWithAuth(`${API_BASE}/notifications?page=${page}&size=${state.size}`);
@@ -170,15 +325,15 @@
             if (!rows.length) { tbody.innerHTML = '<tr><td colspan="5">Không có dữ liệu</td></tr>'; } else {
                 tbody.innerHTML = rows.map(n => `
                     <tr class="clickable" onclick="openDetail(${n.id})">
-                        <td>${n.title||''}</td>
-                        <td>${n.type||''}</td>
-                        <td>${n.channel||''}</td>
+                        <td>${n.title || ''}</td>
+                        <td>${n.type || ''}</td>
+                        <td>${n.channel || ''}</td>
                         <td>${fmt(n.createdAt)}</td>
                         <td>${n.read ? '<span class="badge read">Đã đọc</span>' : '<span class="badge unread">Chưa đọc</span>'}</td>
                     </tr>
                 `).join('');
             }
-            document.getElementById('pageInfo').textContent = `Trang ${state.page+1}/${state.totalPages || 1}`;
+            document.getElementById('pageInfo').textContent = `Trang ${state.page + 1}/${state.totalPages || 1}`;
         }
 
         function openDetail(id) {
@@ -186,15 +341,15 @@
             if (!n) return;
             selected = n;
             document.getElementById('detailCard').classList.remove('hidden');
-            document.getElementById('dTitle').textContent = n.title||'';
-            document.getElementById('dType').textContent = n.type||'';
-            document.getElementById('dChannel').textContent = n.channel||'';
+            document.getElementById('dTitle').textContent = n.title || '';
+            document.getElementById('dType').textContent = n.type || '';
+            document.getElementById('dChannel').textContent = n.channel || '';
             document.getElementById('dStatus').textContent = n.read ? 'Đã đọc' : 'Chưa đọc';
             document.getElementById('dCreated').textContent = fmt(n.createdAt);
             document.getElementById('dReadAt').textContent = fmt(n.readAt);
-            document.getElementById('dMessage').textContent = n.message||'';
+            document.getElementById('dMessage').textContent = n.message || '';
             let metaText = n.metadata || '';
-            try { if (metaText) metaText = JSON.stringify(JSON.parse(metaText), null, 2); } catch {}
+            try { if (metaText) metaText = JSON.stringify(JSON.parse(metaText), null, 2); } catch { }
             document.getElementById('dMeta').textContent = metaText || '(không có)';
             document.getElementById('btnMarkRead').disabled = !!n.read;
         }
@@ -202,23 +357,24 @@
         async function markSelectedRead() {
             if (!selected) return;
             try {
-                const res = await fetchWithAuth(`${API_BASE}/notifications/${selected.id}/read`, { method:'POST' });
+                const res = await fetchWithAuth(`${API_BASE}/notifications/${selected.id}/read`, { method: 'POST' });
                 if (!res.ok) throw new Error('Đánh dấu đã đọc thất bại');
-                showMsg('Đã đánh dấu thông báo là đã đọc','success');
+                showMsg('Đã đánh dấu thông báo là đã đọc', 'success');
                 loadPage(state.page);
-            } catch(err) { showMsg(err.message); }
+            } catch (err) { showMsg(err.message); }
         }
 
         async function markAllRead() {
             try {
-                const res = await fetchWithAuth(`${API_BASE}/notifications/read-all`, { method:'POST' });
+                const res = await fetchWithAuth(`${API_BASE}/notifications/read-all`, { method: 'POST' });
                 if (!res.ok) throw new Error('Đánh dấu tất cả thất bại');
-                showMsg('Đã đánh dấu tất cả thông báo là đã đọc','success');
+                showMsg('Đã đánh dấu tất cả thông báo là đã đọc', 'success');
                 loadPage(state.page);
-            } catch(err) { showMsg(err.message); }
+            } catch (err) { showMsg(err.message); }
         }
 
         loadPage(0);
     </script>
 </body>
+
 </html>

@@ -1,8 +1,5 @@
 package ut.edu.evcs.project_java.web.dto.payment;
 
-/**
- * Payment Response Model - Response data after payment
- */
 public class PaymentResponseModel {
     private String orderDescription;
     private String transactionId;
@@ -13,10 +10,11 @@ public class PaymentResponseModel {
     private String token;
     private String vnPayResponseCode;
 
-    public PaymentResponseModel() {}
+    public PaymentResponseModel() {
+    }
 
     public PaymentResponseModel(String orderDescription, String transactionId, String orderId, String paymentMethod,
-                                String paymentId, boolean success, String token, String vnPayResponseCode) {
+            String paymentId, boolean success, String token, String vnPayResponseCode) {
         this.orderDescription = orderDescription;
         this.transactionId = transactionId;
         this.orderId = orderId;
@@ -27,27 +25,67 @@ public class PaymentResponseModel {
         this.vnPayResponseCode = vnPayResponseCode;
     }
 
-    public String getOrderDescription() { return orderDescription; }
-    public void setOrderDescription(String orderDescription) { this.orderDescription = orderDescription; }
+    public String getOrderDescription() {
+        return orderDescription;
+    }
 
-    public String getTransactionId() { return transactionId; }
-    public void setTransactionId(String transactionId) { this.transactionId = transactionId; }
+    public void setOrderDescription(String orderDescription) {
+        this.orderDescription = orderDescription;
+    }
 
-    public String getOrderId() { return orderId; }
-    public void setOrderId(String orderId) { this.orderId = orderId; }
+    public String getTransactionId() {
+        return transactionId;
+    }
 
-    public String getPaymentMethod() { return paymentMethod; }
-    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+    public void setTransactionId(String transactionId) {
+        this.transactionId = transactionId;
+    }
 
-    public String getPaymentId() { return paymentId; }
-    public void setPaymentId(String paymentId) { this.paymentId = paymentId; }
+    public String getOrderId() {
+        return orderId;
+    }
 
-    public boolean isSuccess() { return success; }
-    public void setSuccess(boolean success) { this.success = success; }
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
+    }
 
-    public String getToken() { return token; }
-    public void setToken(String token) { this.token = token; }
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
 
-    public String getVnPayResponseCode() { return vnPayResponseCode; }
-    public void setVnPayResponseCode(String vnPayResponseCode) { this.vnPayResponseCode = vnPayResponseCode; }
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
+
+    public String getPaymentId() {
+        return paymentId;
+    }
+
+    public void setPaymentId(String paymentId) {
+        this.paymentId = paymentId;
+    }
+
+    public boolean isSuccess() {
+        return success;
+    }
+
+    public void setSuccess(boolean success) {
+        this.success = success;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public String getVnPayResponseCode() {
+        return vnPayResponseCode;
+    }
+
+    public void setVnPayResponseCode(String vnPayResponseCode) {
+        this.vnPayResponseCode = vnPayResponseCode;
+    }
 }

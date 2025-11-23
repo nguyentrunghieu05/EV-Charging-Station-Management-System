@@ -5,14 +5,13 @@ public class PaymentInformationModel {
     private double amount;
     private String orderDescription;
     private String name;
-    private String bankCode; // Trường mới để nhận mã ngân hàng từ Frontend
+    private String bankCode;
 
-    // Constructor mặc định (bắt buộc để Jackson parse JSON)
     public PaymentInformationModel() {
     }
 
-    // Constructor đầy đủ tham số
-    public PaymentInformationModel(String orderType, double amount, String orderDescription, String name, String bankCode) {
+    public PaymentInformationModel(String orderType, double amount, String orderDescription, String name,
+            String bankCode) {
         this.orderType = orderType;
         this.amount = amount;
         this.orderDescription = orderDescription;

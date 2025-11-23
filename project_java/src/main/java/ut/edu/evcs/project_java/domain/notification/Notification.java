@@ -40,7 +40,7 @@ public class Notification {
     private LocalDateTime readAt;
 
     @Column(name = "metadata", columnDefinition = "TEXT")
-    private String metadata; // JSON string
+    private String metadata;
 
     public Notification() {
     }
@@ -53,7 +53,7 @@ public class Notification {
     }
 
     // getters & setters
-    
+
     public Long getId() {
         return id;
     }
@@ -136,8 +136,10 @@ public class Notification {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Notification)) return false;
+        if (this == o)
+            return true;
+        if (!(o instanceof Notification))
+            return false;
         Notification that = (Notification) o;
         return Objects.equals(id, that.id);
     }

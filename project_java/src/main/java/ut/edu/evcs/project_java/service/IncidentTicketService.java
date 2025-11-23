@@ -24,9 +24,6 @@ public class IncidentTicketService {
     private static final String STATUS_RESOLVED = "RESOLVED";
     private static final String STATUS_CLOSED = "CLOSED";
 
-    /**
-     * Tạo incident ticket mới
-     */
     @Transactional
     public IncidentTicket create(IncidentTicket ticket) {
         if (ticket.getStationId() == null || ticket.getStationId().isBlank()) {
@@ -39,7 +36,6 @@ public class IncidentTicketService {
             throw new IllegalArgumentException("description is required");
         }
 
-        // Default values
         if (ticket.getStatus() == null || ticket.getStatus().isBlank()) {
             ticket.setStatus(STATUS_OPEN);
         }
@@ -54,9 +50,6 @@ public class IncidentTicketService {
         return repo.save(ticket);
     }
 
-    /**
-     * Update ticket status
-     */
     @Transactional
     public IncidentTicket updateStatus(String id, String newStatus, String resolution) {
         IncidentTicket ticket = repo.findById(id)
@@ -75,9 +68,6 @@ public class IncidentTicketService {
         return repo.save(ticket);
     }
 
-    /**
-     * Assign ticket to staff
-     */
     @Transactional
     public IncidentTicket assignTo(String id, String staffId) {
         IncidentTicket ticket = repo.findById(id)
@@ -90,44 +80,26 @@ public class IncidentTicketService {
         return repo.save(ticket);
     }
 
-    /**
-     * Get tickets by station
-     */
     public List<IncidentTicket> getByStation(String stationId) {
         return repo.findByStationId(stationId);
     }
 
-    /**
-     * Get open tickets (OPEN + IN_PROGRESS)
-     */
     public List<IncidentTicket> getOpenTickets() {
         return repo.findByStatusIn(List.of(STATUS_OPEN, STATUS_IN_PROGRESS));
     }
 
-    /**
-     * Get tickets by severity
-     */
     public List<IncidentTicket> getBySeverity(String severity) {
         return repo.findBySeverityIgnoreCase(severity);
     }
 
-    /**
-     * Get tickets by status
-     */
     public List<IncidentTicket> getByStatus(String status) {
         return repo.findByStatus(status);
     }
 
-    /**
-     * Get ticket by ID
-     */
     public Optional<IncidentTicket> getById(String id) {
         return repo.findById(id);
     }
 
-    /**
-     * Get all tickets
-     */
     public List<IncidentTicket> getAll() {
         return repo.findAll();
     }

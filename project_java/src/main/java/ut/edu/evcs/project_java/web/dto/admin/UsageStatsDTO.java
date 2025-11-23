@@ -16,11 +16,11 @@ public class UsageStatsDTO {
     }
 
     public UsageStatsDTO(long totalSessions,
-                         long completedSessions,
-                         long activeSessions,
-                         BigDecimal totalKwhDelivered,
-                         Double avgKwhPerSession,
-                         Double avgSessionDurationMinutes) {
+            long completedSessions,
+            long activeSessions,
+            BigDecimal totalKwhDelivered,
+            Double avgKwhPerSession,
+            Double avgSessionDurationMinutes) {
         this.totalSessions = totalSessions;
         this.completedSessions = completedSessions;
         this.activeSessions = activeSessions;

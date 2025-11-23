@@ -1,32 +1,132 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EVCS - Quản lý xe</title>
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#f5f7fa; }
-        .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff; padding:15px 30px; display:flex; justify-content:space-between; align-items:center; }
-        .container { max-width:1100px; margin:30px auto; padding:0 20px; }
-        .card { background:#fff; padding:20px; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.08); margin-bottom:20px; }
-        .card h2 { margin-bottom:15px; color:#333; }
-        .grid { display:grid; grid-template-columns: 1fr 1fr; gap:15px; }
-        .form-group { display:flex; flex-direction:column; gap:8px; }
-        .form-group input, .form-group select { padding:10px; border:2px solid #e0e0e0; border-radius:8px; font-size:14px; }
-        .btn { padding:10px 14px; border:none; border-radius:8px; font-weight:600; cursor:pointer; }
-        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff; }
-        .btn-secondary { background:#f0f0f0; color:#666; }
-        .actions { display:flex; gap:8px; }
-        table { width:100%; border-collapse:collapse; }
-        th, td { padding:12px; border-bottom:1px solid #eee; text-align:left; font-size:14px; }
-        .alert { padding:12px; border-radius:8px; margin-bottom:15px; }
-        .alert.error { background:#ffebee; color:#c62828; }
-        .alert.success { background:#e8f5e9; color:#2e7d32; }
-        .hidden { display:none; }
-        .right { text-align:right; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 10px 14px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .alert.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .alert.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .right {
+            text-align: right;
+        }
     </style>
 </head>
+
 <body>
     <nav class="navbar">
         <h1>⚡ EVCS - Quản lý xe</h1>
@@ -78,11 +178,18 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Hãng</th><th>Model</th><th>Biển số</th><th>Pin (kWh)</th><th>Connector</th><th class="right">Thao tác</th>
+                        <th>Hãng</th>
+                        <th>Model</th>
+                        <th>Biển số</th>
+                        <th>Pin (kWh)</th>
+                        <th>Connector</th>
+                        <th class="right">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody id="vehicleTable">
-                    <tr><td colspan="6">Đang tải...</td></tr>
+                    <tr>
+                        <td colspan="6">Đang tải...</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -117,11 +224,11 @@
         let user = JSON.parse(localStorage.getItem('user') || '{}');
         if (!token) { window.location.href = 'auth.html'; }
 
-        function showMsg(text, type='error') {
+        function showMsg(text, type = 'error') {
             const m = document.getElementById('message');
             m.className = 'alert ' + type;
             m.textContent = text;
-            setTimeout(()=>{ m.className=''; m.textContent=''; }, 4000);
+            setTimeout(() => { m.className = ''; m.textContent = ''; }, 4000);
         }
 
         async function refreshAccessToken() {
@@ -138,7 +245,7 @@
             } catch { return false; }
         }
 
-        async function fetchWithAuth(url, options={}) {
+        async function fetchWithAuth(url, options = {}) {
             const opts = Object.assign({}, options);
             opts.headers = Object.assign({}, opts.headers, { 'Authorization': `Bearer ${token}` });
             let res = await fetch(url, opts);
@@ -157,17 +264,17 @@
                 const res = await fetchWithAuth(`${API_BASE}/vehicles/driver/${user.id}`);
                 if (!res.ok) throw new Error('Load vehicles failed');
                 const items = await res.json();
-                if (!Array.isArray(items) || items.length===0) {
+                if (!Array.isArray(items) || items.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="6">Chưa có xe</td></tr>';
                     return;
                 }
                 tbody.innerHTML = items.map(v => `
                     <tr>
-                        <td>${v.brand||''}</td>
-                        <td>${v.model||''}</td>
-                        <td>${v.plateNo||''}</td>
-                        <td>${v.batteryCapacityKWh||''}</td>
-                        <td>${v.connectorSupported||''}</td>
+                        <td>${v.brand || ''}</td>
+                        <td>${v.model || ''}</td>
+                        <td>${v.plateNo || ''}</td>
+                        <td>${v.batteryCapacityKWh || ''}</td>
+                        <td>${v.connectorSupported || ''}</td>
                         <td class="right">
                             <div class="actions">
                                 <button class="btn btn-secondary" onclick="openEdit('${v.id}')">Sửa</button>
@@ -185,34 +292,34 @@
                 brand: document.getElementById('brand').value.trim(),
                 model: document.getElementById('model').value.trim(),
                 plateNo: document.getElementById('plateNo').value.trim(),
-                batteryCapacityKWh: parseFloat(document.getElementById('batteryCapacity').value||'0'),
+                batteryCapacityKWh: parseFloat(document.getElementById('batteryCapacity').value || '0'),
                 connectorSupported: document.getElementById('connectorSupported').value || null
             };
             try {
                 let res = await fetchWithAuth(`${API_BASE}/vehicles`, {
-                    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
                 });
-                if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.message||'Tạo xe thất bại'); }
-                showMsg('Tạo xe thành công','success');
-                document.getElementById('brand').value='';
-                document.getElementById('model').value='';
-                document.getElementById('plateNo').value='';
-                document.getElementById('batteryCapacity').value='';
-                document.getElementById('connectorSupported').value='';
+                if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || 'Tạo xe thất bại'); }
+                showMsg('Tạo xe thành công', 'success');
+                document.getElementById('brand').value = '';
+                document.getElementById('model').value = '';
+                document.getElementById('plateNo').value = '';
+                document.getElementById('batteryCapacity').value = '';
+                document.getElementById('connectorSupported').value = '';
                 loadVehicles();
-            } catch(err) { showMsg(err.message); }
+            } catch (err) { showMsg(err.message); }
         }
 
         function openEdit(id) {
-            const v = (window.__vehicles||[]).find(x=>x.id===id);
+            const v = (window.__vehicles || []).find(x => x.id === id);
             if (!v) return;
             document.getElementById('editCard').classList.remove('hidden');
             document.getElementById('editId').value = v.id;
-            document.getElementById('editBrand').value = v.brand||'';
-            document.getElementById('editModel').value = v.model||'';
-            document.getElementById('editPlate').value = v.plateNo||'';
-            document.getElementById('editBattery').value = v.batteryCapacityKWh||'';
-            document.getElementById('editConnector').value = v.connectorSupported||'';
+            document.getElementById('editBrand').value = v.brand || '';
+            document.getElementById('editModel').value = v.model || '';
+            document.getElementById('editPlate').value = v.plateNo || '';
+            document.getElementById('editBattery').value = v.batteryCapacityKWh || '';
+            document.getElementById('editConnector').value = v.connectorSupported || '';
         }
         function cancelEdit() { document.getElementById('editCard').classList.add('hidden'); }
 
@@ -222,31 +329,32 @@
                 brand: document.getElementById('editBrand').value.trim(),
                 model: document.getElementById('editModel').value.trim(),
                 plateNo: document.getElementById('editPlate').value.trim(),
-                batteryCapacityKWh: parseFloat(document.getElementById('editBattery').value||'0'),
+                batteryCapacityKWh: parseFloat(document.getElementById('editBattery').value || '0'),
                 connectorSupported: document.getElementById('editConnector').value || null
             };
             try {
                 let res = await fetchWithAuth(`${API_BASE}/vehicles/${id}`, {
-                    method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
+                    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
                 });
-                if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.message||'Cập nhật thất bại'); }
-                showMsg('Cập nhật thành công','success');
+                if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || 'Cập nhật thất bại'); }
+                showMsg('Cập nhật thành công', 'success');
                 cancelEdit();
                 loadVehicles();
-            } catch(err) { showMsg(err.message); }
+            } catch (err) { showMsg(err.message); }
         }
 
         async function removeVehicle(id) {
             if (!confirm('Xoá xe này?')) return;
             try {
-                let res = await fetchWithAuth(`${API_BASE}/vehicles/${id}`, { method:'DELETE' });
+                let res = await fetchWithAuth(`${API_BASE}/vehicles/${id}`, { method: 'DELETE' });
                 if (!res.ok) throw new Error('Xoá thất bại');
-                showMsg('Đã xoá','success');
+                showMsg('Đã xoá', 'success');
                 loadVehicles();
-            } catch(err) { showMsg(err.message); }
+            } catch (err) { showMsg(err.message); }
         }
 
         loadVehicles();
     </script>
 </body>
+
 </html>

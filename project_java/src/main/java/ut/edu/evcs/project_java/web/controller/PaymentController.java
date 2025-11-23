@@ -24,7 +24,8 @@ public class PaymentController {
     private final WalletService walletService;
     private final ChargingSessionRepository sessionRepo;
 
-    public PaymentController(InvoiceRepository invoiceRepo, WalletService walletService, ChargingSessionRepository sessionRepo) {
+    public PaymentController(InvoiceRepository invoiceRepo, WalletService walletService,
+            ChargingSessionRepository sessionRepo) {
         this.invoiceRepo = invoiceRepo;
         this.walletService = walletService;
         this.sessionRepo = sessionRepo;
@@ -38,11 +39,11 @@ public class PaymentController {
             String method = (String) body.get("paymentMethod");
             String userId = (String) body.get("userId");
             Object amtObj = body.get("amount");
-            
+
             if (invoiceId == null || method == null || userId == null || amtObj == null) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Thiếu tham số thanh toán"));
             }
-            
+
             BigDecimal amount = new BigDecimal(amtObj.toString());
             if (amount.compareTo(BigDecimal.ZERO) <= 0) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Số tiền phải > 0"));
@@ -50,16 +51,14 @@ public class PaymentController {
 
             Invoice inv = invoiceRepo.findById(invoiceId)
                     .orElseThrow(() -> new RuntimeException("Invoice not found"));
-            
-            // SECURITY FIX: Verify user owns this invoice
-            // Lưu ý: Đảm bảo entity Invoice của bạn có field driverId và getter getDriverId()
+
             if (inv.getDriverId() != null && !userId.equals(inv.getDriverId())) {
                 return ResponseEntity.status(403).body(Map.of("message", "Bạn không có quyền thanh toán hóa đơn này"));
             }
-            
-            // VALIDATION FIX: Amount must match invoice total
+
             if (amount.compareTo(inv.getTotalAmount()) != 0) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Số tiền thanh toán không khớp với tổng hóa đơn"));
+                return ResponseEntity.badRequest()
+                        .body(Map.of("message", "Số tiền thanh toán không khớp với tổng hóa đơn"));
             }
 
             if ("PAID".equalsIgnoreCase(inv.getStatus())) {
@@ -72,7 +71,6 @@ public class PaymentController {
                 }
                 walletService.deduct(userId, amount);
             }
-            // banking/card/qr: logic giả lập thành công (hoặc xử lý qua VNPay Controller riêng)
 
             inv.setStatus("PAID");
             inv.setPaidAt(LocalDateTime.now());
@@ -88,8 +86,7 @@ public class PaymentController {
             return ResponseEntity.ok(Map.of(
                     "status", "SUCCESS",
                     "message", "Payment settled",
-                    "invoiceId", inv.getId()
-            ));
+                    "invoiceId", inv.getId()));
         } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.status(400).body(Map.of("message", e.getMessage()));
         } catch (RuntimeException e) {

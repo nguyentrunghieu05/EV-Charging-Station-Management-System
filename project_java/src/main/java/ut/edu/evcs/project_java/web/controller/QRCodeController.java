@@ -14,7 +14,6 @@ public class QRCodeController {
 
     private final QRCodeService qrCodeService;
 
-    // Constructor (thay cho @RequiredArgsConstructor của Lombok)
     public QRCodeController(QRCodeService qrCodeService) {
         this.qrCodeService = qrCodeService;
     }
@@ -29,8 +28,7 @@ public class QRCodeController {
     @Operation(summary = "Scan QR code and start session")
     public String scanAndStart(
             @RequestParam String qrCode,
-            @RequestParam String driverId
-    ) {
+            @RequestParam String driverId) {
         if (driverId == null || driverId.isBlank()) {
             throw new IllegalArgumentException("driverId is required and must be valid");
         }

@@ -83,7 +83,7 @@ public class AdminManagementServiceImpl implements AdminManagementService {
 
     @Override
     public User createUser(CreateUserRequest request) {
-        // Check if email or username already exists
+
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("Email đã tồn tại: " + request.getEmail());
         }
@@ -162,7 +162,6 @@ public class AdminManagementServiceImpl implements AdminManagementService {
 
         StationDetailDTO dto = convertToStationDetailDTO(station);
 
-        // Get charging points for this station
         List<ChargingPoint> points = chargingPointRepository.findByStation(station);
         dto.setChargingPoints(points.stream()
                 .map(this::convertToChargingPointDetailDTO)
@@ -309,11 +308,9 @@ public class AdminManagementServiceImpl implements AdminManagementService {
         dto.setPhone(user.getPhone());
         dto.setUserType(user.getType().name());
 
-        // Get active subscription if any
         userSubscriptionRepository.findActiveSubscriptionByUserId(user.getId())
                 .ifPresent(sub -> dto.setCurrentSubscriptionPlan(sub.getPlan().getName()));
 
-        // Get wallet balance
         walletRepository.findByOwnerUserId(user.getId())
                 .ifPresent(wallet -> dto.setWalletBalance(wallet.getBalance().doubleValue()));
 

@@ -26,10 +26,10 @@ public class IncidentTicket {
     private String connectorId;
 
     @Column(nullable = false, length = 20)
-    private String severity; // LOW, MEDIUM, HIGH, CRITICAL
+    private String severity;
 
     @Column(nullable = false, length = 20)
-    private String status;   // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+    private String status;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
@@ -38,16 +38,16 @@ public class IncidentTicket {
     private String attachmentUrl;
 
     @Column(name = "reported_by", length = 64)
-    private String reportedBy; // userId người tạo ticket
+    private String reportedBy;
 
     @Column(name = "assigned_to", length = 64)
-    private String assignedTo; // userId staff xử lý
+    private String assignedTo;
 
     @Column(length = 50)
-    private String category;   // CONNECTOR_ERROR, PAYMENT_ERROR, ...
+    private String category;
 
     @Column(length = 30)
-    private String source;     // STAFF_PORTAL, DRIVER_APP, SYSTEM
+    private String source;
 
     @Column(columnDefinition = "TEXT")
     private String resolution;
@@ -190,8 +190,10 @@ public class IncidentTicket {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof IncidentTicket)) return false;
+        if (this == o)
+            return true;
+        if (!(o instanceof IncidentTicket))
+            return false;
         IncidentTicket that = (IncidentTicket) o;
         return Objects.equals(id, that.id);
     }

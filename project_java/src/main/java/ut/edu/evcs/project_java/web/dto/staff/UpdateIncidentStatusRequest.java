@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 public class UpdateIncidentStatusRequest {
 
     @NotBlank
-    private String status; // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+    private String status;
 
     private String resolution;
 

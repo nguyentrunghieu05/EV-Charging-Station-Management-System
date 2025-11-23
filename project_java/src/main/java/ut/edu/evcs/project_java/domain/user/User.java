@@ -38,9 +38,11 @@ public class User {
     @Column(nullable = false, length = 20)
     private UserType type;
 
-    public User() {}
+    public User() {
+    }
 
-    public User(String id, String email, String username, String phone, String fullName, String passwordHash, UserType type) {
+    public User(String id, String email, String username, String phone, String fullName, String passwordHash,
+            UserType type) {
         this.id = id;
         this.email = email;
         this.username = username;
@@ -50,27 +52,62 @@ public class User {
         this.type = type;
     }
 
-    // getters/setters (thêm get/set cho username)
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    // getters/setters
+    public String getId() {
+        return id;
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public void setId(String id) {
+        this.id = id;
+    }
 
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
+    public String getEmail() {
+        return email;
+    }
 
-    public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
-    public String getFullName() { return fullName; }
-    public void setFullName(String fullName) { this.fullName = fullName; }
+    public String getUsername() {
+        return username;
+    }
 
-    public String getPasswordHash() { return passwordHash; }
-    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
-    public UserType getType() { return type; }
-    public void setType(UserType type) { this.type = type; }
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
+    public UserType getType() {
+        return type;
+    }
+
+    public void setType(UserType type) {
+        this.type = type;
+    }
 
     @Override
     public String toString() {

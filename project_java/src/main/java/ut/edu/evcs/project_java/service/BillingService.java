@@ -32,13 +32,11 @@ public class BillingService {
         ChargingSession s = sessionRepo.findById(sessionId)
                 .orElseThrow(() -> new RuntimeException("Session not found"));
 
-        // VALIDATION: Session must be stopped before creating invoice
         if (!"STOPPED".equalsIgnoreCase(s.getStatus()) && !"COMPLETED".equalsIgnoreCase(s.getStatus())) {
             throw new IllegalStateException(
                     "Session must be stopped before creating invoice. Current status: " + s.getStatus());
         }
 
-        // VALIDATION: Session must have endTime
         if (s.getEndTime() == null) {
             throw new IllegalStateException("Session has no endTime set");
         }
@@ -48,8 +46,6 @@ public class BillingService {
             return existing;
         }
 
-        // When totalCost is already set in session (from frontend calculation),
-        // we should use the session's cost components directly to ensure consistency
         BigDecimal sessionTotal = s.getTotalCost();
         boolean useSessionCosts = (sessionTotal != null && sessionTotal.compareTo(BigDecimal.ZERO) > 0);
 
@@ -61,20 +57,15 @@ public class BillingService {
         BigDecimal total;
 
         if (useSessionCosts) {
-            // Use costs from session (already calculated by frontend or backend)
+
             energy = s.getEnergyCost() != null ? s.getEnergyCost() : BigDecimal.ZERO;
             time = s.getTimeCost() != null ? s.getTimeCost() : BigDecimal.ZERO;
             idle = s.getIdleFee() != null ? s.getIdleFee() : BigDecimal.ZERO;
             total = sessionTotal.setScale(2, RoundingMode.HALF_UP);
 
-            // Calculate subtotal and VAT from total
-            // total = subtotal + vat, where vat = subtotal * 0.10
-            // total = subtotal * 1.10
-            // subtotal = total / 1.10
             subtotal = total.divide(BigDecimal.valueOf(1.10), 2, RoundingMode.HALF_UP);
             vat = total.subtract(subtotal).setScale(2, RoundingMode.HALF_UP);
         } else {
-            // Fallback: Calculate from session data
             energy = s.getEnergyCost() == null ? BigDecimal.ZERO : s.getEnergyCost();
             if ((energy == null || energy.compareTo(BigDecimal.ZERO) == 0) && s.getKwhDelivered() > 0) {
                 BigDecimal unit = BigDecimal.valueOf(3000);
@@ -93,7 +84,7 @@ public class BillingService {
         inv.setEnergyCost(energy);
         inv.setTimeCost(time);
         inv.setIdleFee(idle);
-        inv.setServiceFee(time.add(idle)); // Service fee = time + idle
+        inv.setServiceFee(time.add(idle));
         inv.setSubtotal(subtotal);
         inv.setTaxAmount(vat);
         inv.setTotalAmount(total);
@@ -101,7 +92,6 @@ public class BillingService {
         inv.setStatus("ISSUED");
         inv.setInvoiceNo(generateInvoiceNo());
 
-        // Set new fields
         inv.setKwhDelivered(s.getKwhDelivered());
         inv.setUnitPrice(s.getUnitPriceVnd() != null ? s.getUnitPriceVnd() : new BigDecimal("3000"));
 
@@ -133,7 +123,7 @@ public class BillingService {
                 Invoice created = createInvoice(s.getId());
                 result.add(created);
             } catch (RuntimeException e) {
-                // Skip sessions that cannot be invoiced yet
+
             }
         }
         return result;
