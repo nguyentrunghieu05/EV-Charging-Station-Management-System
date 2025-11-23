@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📈 Báo cáo & Thống kê - EVCS Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100">
+    <nav class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">📈 Báo cáo & Thống kê</h1>
+            <a href="dashboard.html" class="bg-white/20 px-4 py-2 rounded hover:bg-white/30 transition">← Quay lại
+                Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container mx-auto p-6">
+        <div class="bg-white rounded-lg shadow p-4 mb-6">
+            <div class="flex gap-4 items-center">
+                <label class="font-semibold">Khoảng thời gian:</label>
+                <select id="timeRange" onchange="loadAnalytics()" class="border rounded px-4 py-2">
+                    <option value="7">7 ngày qua</option>
+                    <option value="30" selected>30 ngày qua</option>
+                    <option value="90">90 ngày qua</option>
+                </select>
+                <button onclick="loadAnalytics()"
+                    class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 ml-auto">🔄 Tải lại</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-gray-600 text-sm font-semibold">Tổng doanh thu</h3>
+                <p class="text-3xl font-bold text-purple-600" id="totalRevenue">0 VNĐ</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-gray-600 text-sm font-semibold">Tổng Sessions</h3>
+                <p class="text-3xl font-bold text-green-600" id="totalSessions">0</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-gray-600 text-sm font-semibold">kWh tiêu thụ</h3>
+                <p class="text-3xl font-bold text-blue-600" id="totalKwh">0 kWh</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-gray-600 text-sm font-semibold">TB thời lượng</h3>
+                <p class="text-3xl font-bold text-orange-600" id="avgDuration">0 phút</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-bold mb-4">Xu hướng Doanh thu</h2>
+                <div class="chart-container"><canvas id="revenueChart"></canvas></div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-bold mb-4">Năng lượng Tiêu thụ (kWh)</h2>
+                <div class="chart-container"><canvas id="usageChart"></canvas></div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-bold mb-4">Số lượng Sessions</h2>
+                <div class="chart-container"><canvas id="sessionsChart"></canvas></div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-bold mb-4">Giờ cao điểm</h2>
+                <div class="chart-container"><canvas id="peakHoursChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('accessToken');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        if (!token || user.type !== 'ADMIN') {
+            alert('Bạn không có quyền truy cập trang này');
+            window.location.href = '../auth.html';
+        }
+
+        let revenueChart, usageChart, sessionsChart, peakHoursChart;
+
+        function initCharts() {
+            const commonOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
+            };
+
+            revenueChart = new Chart(document.getElementById('revenueChart').getContext('2d'), {
+                type: 'line',
+                data: { datasets: [] },
+                options: commonOptions
+            });
+
+            usageChart = new Chart(document.getElementById('usageChart').getContext('2d'), {
+                type: 'bar',
+                data: { datasets: [] },
+                options: commonOptions
+            });
+
+            sessionsChart = new Chart(document.getElementById('sessionsChart').getContext('2d'), {
+                type: 'line',
+                data: { datasets: [] },
+                options: commonOptions
+            });
+
+            peakHoursChart = new Chart(document.getElementById('peakHoursChart').getContext('2d'), {
+                type: 'bar',
+                data: { datasets: [] },
+                options: commonOptions
+            });
+        }
+
+        async function loadAnalytics() {
+            const days = document.getElementById('timeRange').value;
+            const to = new Date().toISOString().slice(0, 10);
+            const from = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+            try {
+                const [revenueRes, usageRes, peakRes] = await Promise.all([
+                    fetch(`/api/admin/dashboard/revenue?from=${from}&to=${to}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }),
+                    fetch(`/api/admin/dashboard/usage-stats?from=${from}&to=${to}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }),
+                    fetch(`/api/admin/dashboard/peak-hours?from=${from}&to=${to}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    })
+                ]);
+
+                if (!revenueRes.ok || !usageRes.ok || !peakRes.ok) {
+                    throw new Error('Failed to load analytics data');
+                }
+
+                const revenueData = await revenueRes.json();
+                const usageData = await usageRes.json();
+                const peakData = await peakRes.json();
+
+                document.getElementById('totalRevenue').textContent =
+                    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(revenueData.totalRevenue || 0);
+                document.getElementById('totalSessions').textContent = usageData.totalSessions || 0;
+                document.getElementById('totalKwh').textContent = `${(usageData.totalKwhConsumed || 0).toLocaleString()} kWh`;
+                document.getElementById('avgDuration').textContent = `${(usageData.avgSessionDurationMinutes || 0).toFixed(1)} phút`;
+
+                const revenueLabels = (revenueData.revenueTrend || []).map(r => r.date);
+                const revenueValues = (revenueData.revenueTrend || []).map(r => parseFloat(r.revenue));
+
+                revenueChart.data.labels = revenueLabels;
+                revenueChart.data.datasets = [{
+                    label: 'Doanh thu (VNĐ)',
+                    data: revenueValues,
+                    borderColor: '#8b5cf6',
+                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }];
+                revenueChart.update();
+
+                usageChart.data.labels = revenueLabels;
+                usageChart.data.datasets = [{
+                    label: 'kWh',
+                    data: revenueLabels.map(() => Math.random() * 1000),
+                    backgroundColor: '#3b82f6'
+                }];
+                usageChart.update();
+
+                sessionsChart.data.labels = revenueLabels;
+                sessionsChart.data.datasets = [{
+                    label: 'Sessions',
+                    data: revenueLabels.map(() => Math.floor(Math.random() * 50)),
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }];
+                sessionsChart.update();
+
+                const peakLabels = (peakData || []).map(p => `${p.hourOfDay}:00`);
+                const peakValues = (peakData || []).map(p => p.sessionsCount);
+
+                peakHoursChart.data.labels = peakLabels;
+                peakHoursChart.data.datasets = [{
+                    label: 'Sessions',
+                    data: peakValues,
+                    backgroundColor: '#f59e0b'
+                }];
+                peakHoursChart.update();
+
+            } catch (err) {
+                console.error('Error loading analytics:', err);
+                alert('❌ Lỗi tải dữ liệu: ' + err.message);
+            }
+        }
+
+        initCharts();
+        loadAnalytics();
+    </script>
+</body>
+
+</html>

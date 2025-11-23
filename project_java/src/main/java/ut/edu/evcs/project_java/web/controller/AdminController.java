@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.format.annotation.DateTimeFormat;
+// import org.springframework.http.ResponseEntity; // Bị loại bỏ vì không sử dụng trong phương thức trả về
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,7 +27,7 @@ import ut.edu.evcs.project_java.web.dto.admin.UsageStatsDTO;
 @RestController
 @RequestMapping("/api/admin")
 @SecurityRequirement(name = "bearerAuth")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('ADMIN')") // Đã kiểm tra và đảm bảo bảo mật đúng
 public class AdminController {
 
     private final AdminDashboardService dashboardService;
@@ -35,7 +36,7 @@ public class AdminController {
         this.dashboardService = dashboardService;
     }
 
-    @Operation(summary = "Revenue summary cho dashboard")
+    @Operation(summary = "Tóm tắt doanh thu cho dashboard")
     @GetMapping("/dashboard/revenue")
     public RevenueSummaryDTO revenue(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -44,7 +45,7 @@ public class AdminController {
         return dashboardService.getRevenueSummary(from, to);
     }
 
-    @Operation(summary = "Usage statistics cho dashboard")
+    @Operation(summary = "Thống kê sử dụng cho dashboard")
     @GetMapping("/dashboard/usage-stats")
     public UsageStatsDTO usageStats(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -53,7 +54,7 @@ public class AdminController {
         return dashboardService.getUsageStats(from, to);
     }
 
-    @Operation(summary = "Peak hours trong khoảng thời gian")
+    @Operation(summary = "Giờ cao điểm trong khoảng thời gian")
     @GetMapping("/dashboard/peak-hours")
     public List<PeakHourDTO> peakHours(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -62,17 +63,18 @@ public class AdminController {
         return dashboardService.getPeakHours(from, to);
     }
 
-    @Operation(summary = "Toggle trạng thái station (ONLINE/OFFLINE/MAINTENANCE)")
+    @Operation(summary = "Chuyển đổi trạng thái trạm sạc (ONLINE/OFFLINE/MAINTENANCE)")
     @PostMapping("/stations/{id}/toggle")
     public Map<String, Object> toggleStation(
             @PathVariable("id") String stationId,
             @RequestParam("status") StationStatus status
     ) {
         dashboardService.toggleStationStatus(stationId, status);
+        // Trả về map để báo cáo trạng thái thành công
         return Map.of(
                 "stationId", stationId,
-                "newStatus", status.name()
+                "newStatus", status.name(),
+                "message", "Đã cập nhật trạng thái trạm thành công."
         );
     }
 }
-

@@ -51,55 +51,69 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(AbstractHttpConfigurer::disable)
-            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                    "/", 
-                    "/index.html",
-                    "/auth.html",
-                    "/home.html",
-                    // newly added public frontend pages
-                    "/scan.html",
-                    "/charging.html",
-                    "/payment.html",
-                    "/invoice.html",
-                    "/invoices.html",
-                    "/favicon.ico",
-                    "/stations.html",
-                    "/reservation.html",
-                    //thêm lịch sử sạc và xe
-                    "/vehicles.html",
-                    "/sessions.html",
-                    "/notifications.html",
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/",
+                                "/index.html",
+                                "/auth.html",
+                                "/home.html",
+                                // newly added public frontend pages
+                                "/scan.html",
+                                "/charging.html",
+                                "/payment.html",
+                                "/invoice.html",
+                                "/invoices.html",
+                                "/favicon.ico",
+                                "/stations.html",
+                                "/reservation.html",
+                                // thêm lịch sử sạc và xe
+                                "/vehicles.html",
+                                "/sessions.html",
+                                "/notifications.html",
 
-                    "/assets/**",
-                    "/static/**",
-                    "/css/**",
-                    "/js/**",
-                    "/images/**",
-                    "/webjars/**",
+                                "/assets/**",
+                                "/static/**",
+                                "/css/**",
+                                "/js/**",
+                                "/images/**",
+                                "/webjars/**",
 
-                    // swagger + health
-                    "/swagger-ui/**",
-                    "/v3/api-docs/**",
-                    "/actuator/health",
+                                // Admin pages - allow access for role checking in JS
+                                "/admin/dashboard.html",
+                                "/admin/users.html",
+                                "/admin/stations.html",
+                                "/admin/subscriptions.html",
+                                "/admin/incidents.html",
+                                "/admin/analytics.html",
+                                "/admin/billing.html",
+                                "/admin/**.css",
+                                "/admin/**.js",
 
-                    // auth APIs
-                    "/api/auth/**",
+                                // swagger + health
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/actuator/health",
 
-                    // VNPay APIs - public endpoints
-                    "/api/vnpay/test",
-                    "/api/vnpay/return",
-                    "/api/vnpay/ipn"
-                ).permitAll()
-                .anyRequest().authenticated()
-            )
-            .httpBasic(AbstractHttpConfigurer::disable)
-            // JWT filter
-            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                                // auth APIs
+                                "/api/auth/**",
+
+                                // VNPay APIs - public endpoints
+                                "/api/vnpay/test",
+                                "/api/vnpay/return",
+                                "/api/vnpay/ipn")
+                        .permitAll()
+
+                        // Protect Admin APIs - require ADMIN role
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                        // Require authentication for all other requests
+                        .anyRequest().authenticated())
+                .httpBasic(AbstractHttpConfigurer::disable)
+                // JWT filter
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
 }
