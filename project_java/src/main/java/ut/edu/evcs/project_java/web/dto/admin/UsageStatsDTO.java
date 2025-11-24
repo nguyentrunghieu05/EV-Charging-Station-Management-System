@@ -15,18 +15,30 @@ public class UsageStatsDTO {
     public UsageStatsDTO() {
     }
 
+    private long activeChargingPoints;
+
     public UsageStatsDTO(long totalSessions,
             long completedSessions,
             long activeSessions,
             BigDecimal totalKwhDelivered,
             Double avgKwhPerSession,
-            Double avgSessionDurationMinutes) {
+            Double avgSessionDurationMinutes,
+            long activeChargingPoints) {
         this.totalSessions = totalSessions;
         this.completedSessions = completedSessions;
         this.activeSessions = activeSessions;
         this.totalKwhDelivered = totalKwhDelivered;
         this.avgKwhPerSession = avgKwhPerSession;
         this.avgSessionDurationMinutes = avgSessionDurationMinutes;
+        this.activeChargingPoints = activeChargingPoints;
+    }
+
+    public long getActiveChargingPoints() {
+        return activeChargingPoints;
+    }
+
+    public void setActiveChargingPoints(long activeChargingPoints) {
+        this.activeChargingPoints = activeChargingPoints;
     }
 
     public long getTotalSessions() {

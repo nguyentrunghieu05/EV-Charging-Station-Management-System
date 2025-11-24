@@ -53,13 +53,21 @@ public class SessionService {
         }
 
         BigDecimal delivered;
-        if (s.getMeterStartKwh() != null && s.getMeterEndKwh() != null) {
-            delivered = s.getMeterEndKwh().subtract(s.getMeterStartKwh());
-        } else if (finalKwh != null && finalKwh.compareTo(BigDecimal.ZERO) > 0) {
+        // Prioritize finalKwh from request (e.g. from frontend simulation)
+        if (finalKwh != null && finalKwh.compareTo(BigDecimal.ZERO) > 0) {
             delivered = finalKwh;
-        } else if (s.getKwhDelivered() > 0) {
+        }
+        // Then check meter readings if they are valid and non-zero
+        else if (s.getMeterStartKwh() != null && s.getMeterEndKwh() != null
+                && s.getMeterEndKwh().compareTo(BigDecimal.ZERO) > 0) {
+            delivered = s.getMeterEndKwh().subtract(s.getMeterStartKwh());
+        }
+        // Then check accumulated kwhDelivered
+        else if (s.getKwhDelivered() > 0) {
             delivered = BigDecimal.valueOf(s.getKwhDelivered());
-        } else {
+        }
+        // Fallback estimation
+        else {
             double hours = java.time.Duration.between(s.getStartTime(), LocalDateTime.now()).toMinutes() / 60.0;
             double powerKW = 50.0; // Fallback constant for fast charging simulation
             double kwhEst = Math.max(0d, powerKW * hours * 0.7);

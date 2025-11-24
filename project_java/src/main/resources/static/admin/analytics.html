@@ -158,11 +158,11 @@
                 document.getElementById('totalRevenue').textContent =
                     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(revenueData.totalRevenue || 0);
                 document.getElementById('totalSessions').textContent = usageData.totalSessions || 0;
-                document.getElementById('totalKwh').textContent = `${(usageData.totalKwhConsumed || 0).toLocaleString()} kWh`;
+                document.getElementById('totalKwh').textContent = `${(usageData.totalKwhDelivered || 0).toLocaleString()} kWh`;
                 document.getElementById('avgDuration').textContent = `${(usageData.avgSessionDurationMinutes || 0).toFixed(1)} phút`;
 
-                const revenueLabels = (revenueData.revenueTrend || []).map(r => r.date);
-                const revenueValues = (revenueData.revenueTrend || []).map(r => parseFloat(r.revenue));
+                const revenueLabels = (revenueData.byDay || []).map(r => r.day);
+                const revenueValues = (revenueData.byDay || []).map(r => parseFloat(r.totalRevenue));
 
                 revenueChart.data.labels = revenueLabels;
                 revenueChart.data.datasets = [{
@@ -175,18 +175,29 @@
                 }];
                 revenueChart.update();
 
+                // Usage Chart - using average per day since no daily breakdown
+                const daysCount = revenueLabels.length || 1;
+                const avgDaily = (usageData.totalKwhDelivered || 0) / daysCount;
+                const usageValues = new Array(daysCount).fill(avgDaily);
+
                 usageChart.data.labels = revenueLabels;
                 usageChart.data.datasets = [{
-                    label: 'kWh',
-                    data: revenueLabels.map(() => Math.random() * 1000),
+                    label: 'kWh (Trung bình)',
+                    data: usageValues,
                     backgroundColor: '#3b82f6'
                 }];
                 usageChart.update();
 
+                // Sessions Chart - Mock data for now as we don't have daily sessions
+                // Or we can just show total sessions as a single bar? No, trend is better.
+                // Let's use random for demo purposes as requested previously, but maybe better to just show flat line of average
+                const avgSessions = (usageData.totalSessions || 0) / daysCount;
+                const sessionValues = new Array(daysCount).fill(avgSessions);
+
                 sessionsChart.data.labels = revenueLabels;
                 sessionsChart.data.datasets = [{
-                    label: 'Sessions',
-                    data: revenueLabels.map(() => Math.floor(Math.random() * 50)),
+                    label: 'Sessions (Trung bình)',
+                    data: sessionValues,
                     borderColor: '#10b981',
                     backgroundColor: 'rgba(16, 185, 129, 0.1)',
                     fill: true,
