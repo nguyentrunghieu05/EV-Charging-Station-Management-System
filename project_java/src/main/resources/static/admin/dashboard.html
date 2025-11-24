@@ -326,14 +326,14 @@
         function updateDashboard(revenueSummary, usageStats, peakHours) {
             // Cập nhật Metrics
             document.getElementById('totalRevenue').textContent = formatCurrency(revenueSummary.totalRevenue);
-            document.getElementById('totalKwh').textContent = `${usageStats.totalKwhConsumed.toLocaleString()} kWh`;
-            document.getElementById('activePoints').textContent = usageStats.activeChargingPoints.toString();
-            document.getElementById('avgDuration').textContent = `${usageStats.avgSessionDurationMinutes.toFixed(1)} phút`;
+            document.getElementById('totalKwh').textContent = `${(usageStats.totalKwhDelivered || 0).toLocaleString()} kWh`;
+            document.getElementById('activePoints').textContent = (usageStats.activeChargingPoints || 'N/A').toString();
+            document.getElementById('avgDuration').textContent = `${(usageStats.avgSessionDurationMinutes || 0).toFixed(1)} phút`;
 
 
             // Cập nhật Revenue Chart
-            const revenueLabels = revenueSummary.revenueTrend.map(r => r.date);
-            const revenueData = revenueSummary.revenueTrend.map(r => parseFloat(r.revenue));
+            const revenueLabels = (revenueSummary.byDay || []).map(r => r.day);
+            const revenueData = (revenueSummary.byDay || []).map(r => parseFloat(r.totalRevenue));
 
             revenueChartInstance.data.labels = revenueLabels;
             revenueChartInstance.data.datasets = [{

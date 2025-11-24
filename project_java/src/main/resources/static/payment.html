@@ -280,6 +280,10 @@
                 <h3 style="color:#667eea; margin-bottom:10px">Chi tiết phí</h3>
                 <div class="cost-item"><span>Điện năng:</span> <span id="energyConsumed">-- kWh</span></div>
                 <div class="cost-item"><span>Đơn giá:</span> <span id="unitPrice">-- đ/kWh</span></div>
+                <div class="cost-item"><span>Phí năng lượng:</span> <span id="energyCost">-- đ</span></div>
+                <div class="cost-item"><span>Phí dịch vụ:</span> <span id="serviceFee">-- đ</span></div>
+                <div class="cost-item"><span>Cộng phụ:</span> <span id="subtotal">-- đ</span></div>
+                <div class="cost-item"><span>Thuế VAT (10%):</span> <span id="vat">-- đ</span></div>
                 <div class="cost-total"><span>Tổng cộng:</span> <span id="totalAmount">-- đ</span></div>
             </div>
 
@@ -418,6 +422,12 @@
                     invoiceData = await iRes.json();
                     document.getElementById('energyConsumed').textContent = (invoiceData.kwhDelivered || 0) + " kWh";
                     document.getElementById('unitPrice').textContent = new Intl.NumberFormat('vi-VN').format(invoiceData.unitPrice || 3000) + " đ/kWh";
+
+                    document.getElementById('energyCost').textContent = new Intl.NumberFormat('vi-VN').format(invoiceData.energyCost || 0) + " đ";
+                    document.getElementById('serviceFee').textContent = new Intl.NumberFormat('vi-VN').format(invoiceData.serviceFee || 0) + " đ";
+                    document.getElementById('subtotal').textContent = new Intl.NumberFormat('vi-VN').format(invoiceData.subtotal || 0) + " đ";
+                    document.getElementById('vat').textContent = new Intl.NumberFormat('vi-VN').format(invoiceData.taxAmount || 0) + " đ";
+
                     document.getElementById('totalAmount').textContent = new Intl.NumberFormat('vi-VN').format(invoiceData.totalAmount || 0) + " đ";
 
                     const status = invoiceData.status || 'PENDING';

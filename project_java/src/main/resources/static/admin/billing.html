@@ -231,7 +231,7 @@
                                 ${invoice.status}
                             </span>
                         </td>
-                        <td class="p-3 text-sm">${new Date(invoice.createdAt).toLocaleDateString('vi-VN')}</td>
+                        <td class="p-3 text-sm">${new Date(invoice.issuedAt).toLocaleDateString('vi-VN')}</td>
                         <td class="p-3">
                             <button onclick="viewInvoice('${invoice.id}')" 
                                 class="text-blue-600 hover:text-blue-800 text-sm font-semibold">

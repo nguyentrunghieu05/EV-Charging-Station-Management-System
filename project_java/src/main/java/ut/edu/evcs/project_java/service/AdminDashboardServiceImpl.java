@@ -26,9 +26,20 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
     private final StationRepository stationRepo;
 
     public AdminDashboardServiceImpl(ChargingSessionRepository sessionRepo,
-                                     StationRepository stationRepo) {
+            StationRepository stationRepo) {
         this.sessionRepo = sessionRepo;
         this.stationRepo = stationRepo;
+    }
+
+    // Helper method to safely convert any Number to BigDecimal
+    private BigDecimal toBigDecimal(Object obj) {
+        if (obj == null)
+            return BigDecimal.ZERO;
+        if (obj instanceof BigDecimal)
+            return (BigDecimal) obj;
+        if (obj instanceof Number)
+            return BigDecimal.valueOf(((Number) obj).doubleValue());
+        return BigDecimal.ZERO;
     }
 
     @Override
@@ -45,11 +56,20 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
         BigDecimal idle = BigDecimal.ZERO;
 
         for (Object[] r : rows) {
-            LocalDate day = ((java.sql.Date) r[0]).toLocalDate();
-            BigDecimal dayTotal = (BigDecimal) r[1];
-            BigDecimal dayEnergy = (BigDecimal) r[2];
-            BigDecimal dayTime = (BigDecimal) r[3];
-            BigDecimal dayIdle = (BigDecimal) r[4];
+            // Handle potential date casting issues if DB returns Timestamp
+            LocalDate day;
+            if (r[0] instanceof java.sql.Date) {
+                day = ((java.sql.Date) r[0]).toLocalDate();
+            } else if (r[0] instanceof java.sql.Timestamp) {
+                day = ((java.sql.Timestamp) r[0]).toLocalDateTime().toLocalDate();
+            } else {
+                day = LocalDate.now(); // Fallback
+            }
+
+            BigDecimal dayTotal = toBigDecimal(r[1]);
+            BigDecimal dayEnergy = toBigDecimal(r[2]);
+            BigDecimal dayTime = toBigDecimal(r[3]);
+            BigDecimal dayIdle = toBigDecimal(r[4]);
 
             byDay.add(new RevenueByDayDTO(day, dayTotal, dayEnergy, dayTime, dayIdle));
 
@@ -66,8 +86,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                 energy,
                 time,
                 idle,
-                byDay
-        );
+                byDay);
     }
 
     @Override
@@ -79,7 +98,13 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
         long completedSessions = sessionRepo.countCompletedSessionsBetween(fromDt, toDt);
         long activeSessions = sessionRepo.countActiveSessionsBetween(fromDt, toDt);
 
+        // Count active stations (status != OFFLINE)
+        long activeChargingPoints = stationRepo.countByStatusNot(StationStatus.OFFLINE);
+
         BigDecimal totalKwh = sessionRepo.sumKwhBetween(fromDt, toDt);
+        if (totalKwh == null)
+            totalKwh = BigDecimal.ZERO;
+
         Double avgDurationMinutes = sessionRepo.avgDurationMinutes(fromDt, toDt);
 
         Double avgKwhPerSession = null;
@@ -95,8 +120,8 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                 activeSessions,
                 totalKwh,
                 avgKwhPerSession,
-                avgDurationMinutes
-        );
+                avgDurationMinutes,
+                activeChargingPoints);
     }
 
     @Override
@@ -108,9 +133,9 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
         List<PeakHourDTO> result = new ArrayList<>();
 
         for (Object[] r : rows) {
-            Integer hour = (Integer) r[0];
-            Long count = (Long) r[1];
-            BigDecimal kwh = (BigDecimal) r[2];
+            Integer hour = r[0] != null ? ((Number) r[0]).intValue() : 0;
+            Long count = r[1] != null ? ((Number) r[1]).longValue() : 0L;
+            BigDecimal kwh = toBigDecimal(r[2]);
             result.add(new PeakHourDTO(hour, count, kwh));
         }
 
